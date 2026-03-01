@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VELORA — Buchete Premium București</title>
+<meta name="description" content="Buchete premium pentru nunți și botezuri în București. Flori artificiale de lux, personalizate. Florile care rămân.">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --gold: #C9A96E;
+  --gold-light: #E8D5A3;
+  --gold-dim: rgba(201,169,110,0.25);
+  --black: #0A0908;
+  --charcoal: #161210;
+  --cream: #FAF7F2;
+  --warm: #F0EAE0;
+  --gray: #8A8178;
+  --light-gray: #C5BFB8;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--cream);
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* CUSTOM CURSOR */
+.cursor {
+  width: 8px; height: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  transition: transform 0.15s ease;
+}
+.cursor-ring {
+  width: 32px; height: 32px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 50%;
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 9998;
+  transition: transform 0.4s ease, width 0.3s, height 0.3s, border-color 0.3s;
+}
+body:hover .cursor-ring { border-color: rgba(201,169,110,0.5); }
+
+/* NAV */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 24px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.5s, padding 0.4s;
+}
+nav.scrolled {
+  background: rgba(10,9,8,0.95);
+  backdrop-filter: blur(12px);
+  padding: 16px 60px;
+  border-bottom: 1px solid var(--gold-dim);
+}
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: var(--cream);
+  text-decoration: none;
+}
+.nav-logo span { color: var(--gold); }
+.nav-links { display: flex; gap: 40px; list-style: none; }
+.nav-links a {
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--light-gray);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.nav-links a:hover { color: var(--gold); }
+.nav-cta {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid var(--gold-dim);
+  padding: 10px 24px;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+.nav-cta:hover {
+  background: var(--gold);
+  color: var(--black);
+  border-color: var(--gold);
+}
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 120px 60px 80px;
+}
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 70% at 60% 40%, rgba(201,169,110,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 50% at 20% 70%, rgba(201,169,110,0.04) 0%, transparent 50%);
+}
+.hero-grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  pointer-events: none;
+}
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  text-align: center;
+}
+.hero-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.5em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 40px;
+  opacity: 0;
+  animation: fadeUp 1s ease 0.2s forwards;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.hero-eyebrow::before, .hero-eyebrow::after {
+  content: '';
+  width: 50px; height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold));
+}
+.hero-eyebrow::after { background: linear-gradient(to left, transparent, var(--gold)); }
+
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(80px, 15vw, 180px);
+  font-weight: 300;
+  line-height: 0.85;
+  letter-spacing: 0.08em;
+  color: var(--cream);
+  opacity: 0;
+  animation: fadeUp 1.2s ease 0.4s forwards;
+  margin-bottom: 16px;
+}
+.hero-title span { color: var(--gold); display: block; }
+
+.hero-divider {
+  width: 1px; height: 50px;
+  background: linear-gradient(to bottom, var(--gold), transparent);
+  margin: 36px auto;
+  opacity: 0;
+  animation: fadeUp 1s ease 0.8s forwards;
+}
+
+.hero-tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(18px, 2.5vw, 26px);
+  color: var(--gold-light);
+  letter-spacing: 0.04em;
+  opacity: 0;
+  animation: fadeUp 1s ease 1s forwards;
+  margin-bottom: 60px;
+}
+
+.hero-sub {
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: var(--gray);
+  text-transform: uppercase;
+  opacity: 0;
+  animation: fadeUp 1s ease 1.2s forwards;
+  margin-bottom: 60px;
+}
+
+.hero-btns {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeUp 1s ease 1.4s forwards;
+}
+
+.btn-primary {
+  display: inline-block;
+  padding: 16px 48px;
+  background: var(--gold);
+  color: var(--black);
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+.btn-primary:hover {
+  background: var(--gold-light);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  display: inline-block;
+  padding: 16px 48px;
+  border: 1px solid var(--gold-dim);
+  color: var(--cream);
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+.btn-secondary:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  transform: translateY(-2px);
+}
+
+/* SCROLL INDICATOR */
+.scroll-ind {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  animation: fadeUp 1s ease 2s forwards;
+}
+.scroll-ind span {
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  color: var(--gray);
+  text-transform: uppercase;
+}
+.scroll-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--gold), transparent);
+  animation: scrollAnim 2s ease infinite;
+}
+@keyframes scrollAnim {
+  0% { transform: scaleY(0); transform-origin: top; opacity: 1; }
+  50% { transform: scaleY(1); transform-origin: top; opacity: 1; }
+  100% { transform: scaleY(1); transform-origin: bottom; opacity: 0; }
+}
+
+/* STRIP */
+.strip {
+  border-top: 1px solid var(--gold-dim);
+  border-bottom: 1px solid var(--gold-dim);
+  padding: 18px 0;
+  overflow: hidden;
+  background: var(--charcoal);
+}
+.strip-track {
+  display: flex;
+  gap: 60px;
+  white-space: nowrap;
+  animation: marquee 20s linear infinite;
+}
+.strip-item {
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: var(--gold);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+.strip-item::before { content: '✦'; font-size: 8px; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* SECTIONS */
+section { padding: 120px 60px; }
+.section-inner { max-width: 1100px; margin: 0 auto; }
+
+.section-label {
+  font-size: 10px;
+  letter-spacing: 0.45em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 60px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--gold-dim), transparent);
+}
+
+/* ABOUT */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 100px;
+  align-items: center;
+}
+.about-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 300;
+  line-height: 1.15;
+  color: var(--cream);
+  margin-bottom: 32px;
+}
+.about-title em { color: var(--gold); font-style: italic; }
+.about-text {
+  font-size: 15px;
+  color: var(--gray);
+  line-height: 1.9;
+  margin-bottom: 20px;
+}
+.about-visual {
+  position: relative;
+  height: 500px;
+}
+.about-box {
+  position: absolute;
+  border: 1px solid var(--gold-dim);
+}
+.about-box-1 {
+  inset: 0;
+  background: var(--charcoal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 120px;
+  color: rgba(201,169,110,0.08);
+  font-weight: 300;
+}
+.about-box-2 {
+  bottom: -20px;
+  right: -20px;
+  width: 200px;
+  height: 200px;
+  background: var(--black);
+  border-color: var(--gold);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.about-stat {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 52px;
+  color: var(--gold);
+  font-weight: 300;
+  line-height: 1;
+}
+.about-stat-label {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--gray);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* COLLECTIONS */
+#colectii { background: var(--charcoal); }
+
+.collections-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin-top: 20px;
+}
+
+.collection-card {
+  background: var(--black);
+  padding: 52px 40px;
+  border: 1px solid rgba(201,169,110,0.08);
+  position: relative;
+  transition: all 0.4s ease;
+  cursor: pointer;
+}
+.collection-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-4px);
+}
+.collection-card.featured {
+  border-color: rgba(201,169,110,0.3);
+  background: #111008;
+}
+.collection-card.featured::before {
+  content: '✦ RECOMANDAT';
+  position: absolute;
+  top: -1px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--gold);
+  color: var(--black);
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  padding: 6px 20px;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.coll-number {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 64px;
+  color: rgba(201,169,110,0.07);
+  line-height: 1;
+  margin-bottom: 24px;
+}
+.coll-name {
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: var(--gray);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.coll-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 52px;
+  color: var(--cream);
+  font-weight: 300;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.coll-price-sub {
+  font-size: 12px;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  margin-bottom: 32px;
+}
+.coll-divider {
+  width: 30px; height: 1px;
+  background: var(--gold);
+  opacity: 0.3;
+  margin-bottom: 28px;
+}
+.coll-items { list-style: none; }
+.coll-items li {
+  font-size: 13px;
+  color: var(--gray);
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  letter-spacing: 0.02em;
+}
+.coll-items li::before { content: '—'; color: var(--gold); opacity: 0.5; font-size: 10px; }
+.coll-items li.highlight { color: var(--cream); }
+
+/* WHY */
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  margin-top: 60px;
+}
+.why-card {
+  padding: 48px 32px;
+  border: 1px solid rgba(201,169,110,0.08);
+  background: var(--charcoal);
+  transition: border-color 0.4s;
+}
+.why-card:hover { border-color: rgba(201,169,110,0.3); }
+.why-icon {
+  font-size: 28px;
+  margin-bottom: 24px;
+  display: block;
+}
+.why-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  color: var(--cream);
+  margin-bottom: 12px;
+  font-weight: 400;
+}
+.why-text { font-size: 13px; color: var(--gray); line-height: 1.8; }
+
+/* PROCESS */
+#proces { background: var(--charcoal); }
+.process-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+  margin-top: 60px;
+  position: relative;
+}
+.process-steps::before {
+  content: '';
+  position: absolute;
+  top: 28px;
+  left: 5%;
+  right: 5%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-dim), var(--gold-dim), transparent);
+}
+.process-step { position: relative; text-align: center; }
+.step-dot {
+  width: 56px; height: 56px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  background: var(--black);
+  position: relative;
+  z-index: 1;
+}
+.step-dot-inner {
+  width: 8px; height: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+}
+.step-num {
+  position: absolute;
+  top: -8px; right: -8px;
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+}
+.step-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  color: var(--cream);
+  margin-bottom: 12px;
+}
+.step-text { font-size: 13px; color: var(--gray); line-height: 1.7; }
+
+/* GALLERY PLACEHOLDER */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 300px 300px;
+  gap: 4px;
+  margin-top: 60px;
+}
+.gallery-item {
+  background: var(--charcoal);
+  border: 1px solid rgba(201,169,110,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s;
+}
+.gallery-item:hover { border-color: var(--gold); }
+.gallery-item.large { grid-row: span 2; }
+.gallery-placeholder {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  color: rgba(201,169,110,0.3);
+  letter-spacing: 0.2em;
+  text-align: center;
+  line-height: 1.8;
+}
+.gallery-item:hover .gallery-placeholder { color: rgba(201,169,110,0.6); }
+
+/* TESTIMONIALS */
+#testimoniale { background: var(--charcoal); }
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin-top: 60px;
+}
+.testimonial-card {
+  padding: 48px 36px;
+  background: var(--black);
+  border: 1px solid rgba(201,169,110,0.08);
+}
+.testimonial-stars {
+  color: var(--gold);
+  font-size: 14px;
+  letter-spacing: 4px;
+  margin-bottom: 24px;
+}
+.testimonial-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--cream);
+  line-height: 1.7;
+  margin-bottom: 28px;
+  font-weight: 300;
+}
+.testimonial-author {
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.testimonial-event {
+  font-size: 11px;
+  color: var(--gray);
+  margin-top: 4px;
+  letter-spacing: 0.1em;
+}
+
+/* CONTACT */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+.contact-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(36px, 4vw, 56px);
+  font-weight: 300;
+  line-height: 1.2;
+  color: var(--cream);
+  margin-bottom: 24px;
+}
+.contact-title em { color: var(--gold); font-style: italic; }
+.contact-text { font-size: 14px; color: var(--gray); line-height: 1.9; margin-bottom: 40px; }
+.contact-items { display: flex; flex-direction: column; gap: 20px; }
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--light-gray);
+}
+.contact-item-icon {
+  width: 40px; height: 40px;
+  border: 1px solid var(--gold-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* FORM */
+.form-group { margin-bottom: 24px; }
+.form-group label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  background: var(--charcoal);
+  border: 1px solid rgba(201,169,110,0.15);
+  color: var(--cream);
+  padding: 14px 18px;
+  font-size: 14px;
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  outline: none;
+  transition: border-color 0.3s;
+  appearance: none;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  border-color: var(--gold);
+}
+.form-group textarea { height: 120px; resize: none; }
+.form-group select option { background: var(--charcoal); }
+.btn-submit {
+  width: 100%;
+  padding: 18px;
+  background: var(--gold);
+  color: var(--black);
+  border: none;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: 'Jost', sans-serif;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+.btn-submit:hover { background: var(--gold-light); transform: translateY(-2px); }
+
+/* WHATSAPP FLOAT */
+.wa-float {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 56px; height: 56px;
+  background: #25D366;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  z-index: 200;
+  box-shadow: 0 4px 20px rgba(37,211,102,0.4);
+  transition: transform 0.3s, box-shadow 0.3s;
+  font-size: 24px;
+}
+.wa-float:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 28px rgba(37,211,102,0.6);
+}
+
+/* FOOTER */
+footer {
+  background: var(--charcoal);
+  border-top: 1px solid var(--gold-dim);
+  padding: 60px;
+}
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 60px;
+  margin-bottom: 48px;
+}
+.footer-brand-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  color: var(--cream);
+  margin-bottom: 12px;
+}
+.footer-brand-name span { color: var(--gold); }
+.footer-tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+.footer-desc { font-size: 13px; color: var(--gray); line-height: 1.8; }
+.footer-col-title {
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.footer-links { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.footer-links a {
+  font-size: 13px;
+  color: var(--gray);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.footer-links a:hover { color: var(--cream); }
+.footer-bottom {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-top: 32px;
+  border-top: 1px solid rgba(201,169,110,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-copy { font-size: 11px; color: var(--gray); letter-spacing: 0.05em; }
+.footer-social { display: flex; gap: 20px; }
+.footer-social a {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--gray);
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 0.3s;
+}
+.footer-social a:hover { color: var(--gold); }
+
+/* GALLERY OVERLAY */
+.gallery-item { cursor: pointer; }
+.gallery-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.gallery-item:hover .gallery-overlay { opacity: 1; }
+.gallery-overlay span {
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  color: var(--gold);
+  text-transform: uppercase;
+  border: 1px solid var(--gold);
+  padding: 10px 24px;
+}
+
+/* GALERIE BUTTON */
+.btn-galerie {
+  width: 100%;
+  margin-top: 28px;
+  padding: 14px;
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: 'Jost', sans-serif;
+  transition: all 0.3s;
+}
+.btn-galerie:hover {
+  background: var(--gold);
+  color: var(--black);
+  border-color: var(--gold);
+}
+
+/* LIGHTBOX */
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.lightbox.active { display: flex; }
+.lightbox-img {
+  max-width: 85vw;
+  max-height: 80vh;
+  object-fit: contain;
+  border: 1px solid var(--gold-dim);
+}
+.lightbox-close {
+  position: absolute;
+  top: 24px; right: 32px;
+  font-size: 28px;
+  color: var(--gold);
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: 'Jost', sans-serif;
+  transition: opacity 0.3s;
+}
+.lightbox-close:hover { opacity: 0.6; }
+.lightbox-nav {
+  display: flex;
+  gap: 24px;
+  margin-top: 20px;
+}
+.lightbox-btn {
+  background: none;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  padding: 10px 28px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s;
+}
+.lightbox-btn:hover { background: var(--gold); color: var(--black); }
+.lightbox-counter {
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: var(--gray);
+  margin-top: 12px;
+}
+
+/* CHATBOT */
+.chat-btn {
+  position: fixed;
+  bottom: 32px;
+  left: 32px;
+  width: 56px; height: 56px;
+  background: var(--charcoal);
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 200;
+  font-size: 22px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 20px rgba(201,169,110,0.2);
+}
+.chat-btn:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(201,169,110,0.4); }
+.chat-window {
+  position: fixed;
+  bottom: 100px;
+  left: 32px;
+  width: 340px;
+  background: var(--charcoal);
+  border: 1px solid var(--gold-dim);
+  z-index: 200;
+  display: none;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+.chat-window.open { display: flex; }
+.chat-header {
+  background: var(--black);
+  border-bottom: 1px solid var(--gold-dim);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.chat-header-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  color: var(--cream);
+  letter-spacing: 0.05em;
+}
+.chat-header-status {
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 0.2em;
+  margin-top: 2px;
+}
+.chat-close-btn {
+  background: none;
+  border: none;
+  color: var(--gray);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  transition: color 0.3s;
+}
+.chat-close-btn:hover { color: var(--gold); }
+.chat-messages {
+  padding: 20px;
+  height: 280px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-track { background: var(--black); }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--gold-dim); }
+.chat-msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  border-radius: 2px;
+}
+.chat-msg.bot {
+  background: var(--black);
+  color: var(--cream);
+  border-left: 2px solid var(--gold);
+  align-self: flex-start;
+}
+.chat-msg.user {
+  background: rgba(201,169,110,0.15);
+  color: var(--cream);
+  border-right: 2px solid var(--gold);
+  align-self: flex-end;
+  text-align: right;
+}
+.chat-quick-replies {
+  padding: 0 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.chat-quick-btn {
+  background: none;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  padding: 8px 14px;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Jost', sans-serif;
+  transition: all 0.3s;
+}
+.chat-quick-btn:hover { background: var(--gold); color: var(--black); border-color: var(--gold); }
+.chat-input-area {
+  border-top: 1px solid var(--gold-dim);
+  padding: 12px 16px;
+  display: flex;
+  gap: 10px;
+}
+.chat-input {
+  flex: 1;
+  background: var(--black);
+  border: 1px solid rgba(201,169,110,0.15);
+  color: var(--cream);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-family: 'Jost', sans-serif;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.chat-input:focus { border-color: var(--gold); }
+.chat-send {
+  background: var(--gold);
+  border: none;
+  color: var(--black);
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s;
+}
+.chat-send:hover { background: var(--gold-light); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+/* MOBILE */
+@media (max-width: 900px) {
+  nav { padding: 20px 24px; }
+  nav.scrolled { padding: 14px 24px; }
+  .nav-links { display: none; }
+  section { padding: 80px 24px; }
+  .hero { padding: 100px 24px 60px; }
+  .about-grid, .contact-grid { grid-template-columns: 1fr; gap: 48px; }
+  .about-visual { height: 300px; }
+  .collections-grid, .why-grid, .process-steps, .testimonials-grid { grid-template-columns: 1fr; }
+  .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+  .gallery-item.large { grid-row: span 1; }
+  .footer-inner { grid-template-columns: 1fr; gap: 36px; }
+  .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+  .process-steps::before { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">VEL<span>ORA</span></a>
+  <ul class="nav-links">
+    <li><a href="#despre">Despre</a></li>
+    <li><a href="#colectii">Colecții</a></li>
+    <li><a href="#galerie">Galerie</a></li>
+    <li><a href="#proces">Proces</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Comandă</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grain"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">București · Nunți & Botezuri · 2026</div>
+    <h1 class="hero-title">VEL<span>ORA</span></h1>
+    <div class="hero-divider"></div>
+    <p class="hero-tagline">Florile care rămân.</p>
+    <p class="hero-sub">Buchete premium din flori artificiale de lux · Personalizare completă</p>
+    <div class="hero-btns">
+      <a href="#colectii" class="btn-primary">Vezi Colecțiile</a>
+      <a href="#contact" class="btn-secondary">Solicită Ofertă</a>
+    </div>
+  </div>
+  <div class="scroll-ind">
+    <span>Descoperă</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- STRIP -->
+<div class="strip">
+  <div class="strip-track">
+    <span class="strip-item">Buchete Mireasă</span>
+    <span class="strip-item">Nunți București</span>
+    <span class="strip-item">Botezuri Personalizate</span>
+    <span class="strip-item">Flori Artificiale Premium</span>
+    <span class="strip-item">Aranjamente Masă</span>
+    <span class="strip-item">Lumânări Decorative</span>
+    <span class="strip-item">Buchete Mireasă</span>
+    <span class="strip-item">Nunți București</span>
+    <span class="strip-item">Botezuri Personalizate</span>
+    <span class="strip-item">Flori Artificiale Premium</span>
+    <span class="strip-item">Aranjamente Masă</span>
+    <span class="strip-item">Lumânări Decorative</span>
+  </div>
+</div>
+
+<!-- DESPRE -->
+<section id="despre">
+  <div class="section-inner">
+    <div class="about-grid">
+      <div>
+        <div class="section-label reveal">01 — Povestea Noastră</div>
+        <h2 class="about-title reveal">Fiecare nuntă merită <em>flori care nu se ofilesc.</em></h2>
+        <p class="about-text reveal">Velora s-a născut dintr-o convingere simplă: momentele cele mai importante din viața ta merită să fie păstrate exact așa cum au fost.</p>
+        <p class="about-text reveal">Creăm buchete premium din flori artificiale de calitate superioară — imperceptibil diferite de cele naturale în fotografie, dar fără teama că se vor ofili înainte de primul dans.</p>
+        <p class="about-text reveal">Fiecare aranjament este creat manual, personalizat după viziunea ta. Nu există două buchete Velora identice.</p>
+        <div class="reveal" style="margin-top:40px;">
+          <a href="#contact" class="btn-primary">Începe conversația</a>
+        </div>
+      </div>
+      <div class="about-visual reveal">
+        <div class="about-box about-box-1">V</div>
+        <div class="about-box about-box-2">
+          <div class="about-stat">100%</div>
+          <div class="about-stat-label">Personalizat<br>pentru tine</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY -->
+<section style="padding-top:0;">
+  <div class="section-inner">
+    <div class="section-label reveal">De ce Velora</div>
+    <div class="why-grid">
+      <div class="why-card reveal reveal-delay-1">
+        <span class="why-icon">🌸</span>
+        <div class="why-title">Rămân perfecte</div>
+        <p class="why-text">Florile tale arată la fel de frumos peste 10 ani ca în ziua nunții. O amintire vie, nu una ofilită.</p>
+      </div>
+      <div class="why-card reveal reveal-delay-2">
+        <span class="why-icon">✦</span>
+        <div class="why-title">Complet personalizat</div>
+        <p class="why-text">Orice culoare, orice stil, orice temă. Buchetul tău e creat exclusiv după viziunea ta.</p>
+      </div>
+      <div class="why-card reveal reveal-delay-3">
+        <span class="why-icon">📸</span>
+        <div class="why-title">Perfecte în fotografii</div>
+        <p class="why-text">Fotograful tău te va iubi. Culorile rămân vii toată ziua, indiferent de lumină sau căldură.</p>
+      </div>
+      <div class="why-card reveal reveal-delay-4">
+        <span class="why-icon">🤍</span>
+        <div class="why-title">Fără stres</div>
+        <p class="why-text">Nu există flori care să nu ajungă la timp sau să nu se potrivească. Totul este confirmat înainte de eveniment.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COLECTII -->
+<section id="colectii">
+  <div class="section-inner">
+    <div class="section-label reveal">02 — Colecțiile Noastre</div>
+    <div class="collections-grid">
+      <div class="collection-card reveal reveal-delay-1">
+        <div class="coll-number">01</div>
+        <div class="coll-name">Esențial</div>
+        <div class="coll-price">500 <span style="font-size:20px;color:var(--gold)">RON</span></div>
+        <div class="coll-price-sub">de la</div>
+        <div class="coll-divider"></div>
+        <ul class="coll-items">
+          <li>Buchet mireasă simplu</li>
+          <li>1 model floral la alegere</li>
+          <li>Ambalaj standard Velora</li>
+          <li>Consultație 15 min</li>
+          <li>Livrare București</li>
+        </ul>
+        <button class="btn-galerie" onclick="openCollectionGallery('esential')">🌸 Vezi Galeria</button>
+      </div>
+      <div class="collection-card featured reveal reveal-delay-2">
+        <div class="coll-number">02</div>
+        <div class="coll-name">Signature</div>
+        <div class="coll-price">700 <span style="font-size:20px;color:var(--gold)">RON</span></div>
+        <div class="coll-price-sub">de la</div>
+        <div class="coll-divider"></div>
+        <ul class="coll-items">
+          <li class="highlight">Buchet mireasă premium</li>
+          <li class="highlight">2 buchețele domnișoare</li>
+          <li class="highlight">Personalizare culori & stil</li>
+          <li>Cutie cadou Velora</li>
+          <li>Card personalizat</li>
+          <li>Consultație 30 min</li>
+        </ul>
+        <button class="btn-galerie" onclick="openCollectionGallery('signature')">🌸 Vezi Galeria</button>
+      </div>
+      <div class="collection-card reveal reveal-delay-3">
+        <div class="coll-number">03</div>
+        <div class="coll-name">Atelier Complet</div>
+        <div class="coll-price">1.350 <span style="font-size:20px;color:var(--gold)">RON</span></div>
+        <div class="coll-price-sub">de la</div>
+        <div class="coll-divider"></div>
+        <ul class="coll-items">
+          <li>Tot din Signature</li>
+          <li>Lumânări botez asortate</li>
+          <li>Aranjamente masă (3 buc)</li>
+          <li>Coronițe domnișoare</li>
+          <li>Prioritate în programare</li>
+        </ul>
+        <button class="btn-galerie" onclick="openCollectionGallery('atelier')">🌸 Vezi Galeria</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GALERIE -->
+<section id="galerie" style="background:var(--charcoal)">
+  <div class="section-inner">
+    <div class="section-label reveal">03 — Galerie</div>
+    <div class="gallery-grid">
+      <div class="gallery-item large reveal" onclick="openLightbox(0)">
+        <img src="https://i.imgur.com/oMWlwXB.jpeg" alt="Buchet mireasă Velora" style="width:100%;height:100%;object-fit:cover;display:block;">
+        <div class="gallery-overlay"><span>Vezi</span></div>
+      </div>
+      <div class="gallery-item reveal reveal-delay-1" onclick="openLightbox(1)">
+        <img src="https://i.imgur.com/XDyGc6G.jpeg" alt="Buchet nuntă Velora" style="width:100%;height:100%;object-fit:cover;display:block;">
+        <div class="gallery-overlay"><span>Vezi</span></div>
+      </div>
+      <div class="gallery-item reveal reveal-delay-2" onclick="openLightbox(2)">
+        <img src="https://i.imgur.com/fN3C3DX.jpeg" alt="Aranjament floral Velora" style="width:100%;height:100%;object-fit:cover;display:block;">
+        <div class="gallery-overlay"><span>Vezi</span></div>
+      </div>
+      <div class="gallery-item reveal reveal-delay-1" onclick="openLightbox(3)">
+        <img src="https://i.imgur.com/X35eP3s.jpeg" alt="Buchet botez Velora" style="width:100%;height:100%;object-fit:cover;display:block;">
+        <div class="gallery-overlay"><span>Vezi</span></div>
+      </div>
+      <div class="gallery-item reveal reveal-delay-2" onclick="openLightbox(4)">
+        <img src="https://i.imgur.com/7mrjSaI.jpeg" alt="Colecție Velora" style="width:100%;height:100%;object-fit:cover;display:block;">
+        <div class="gallery-overlay"><span>Vezi</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCES -->
+<section id="proces">
+  <div class="section-inner">
+    <div class="section-label reveal">04 — Cum Funcționează</div>
+    <div class="process-steps">
+      <div class="process-step reveal reveal-delay-1">
+        <div class="step-dot">
+          <div class="step-dot-inner"></div>
+          <span class="step-num">01</span>
+        </div>
+        <div class="step-title">Conversația</div>
+        <p class="step-text">Ne scrii, ne povestești despre ziua ta. Data, stilul, culorile, visul tău. Ascultăm fiecare detaliu.</p>
+      </div>
+      <div class="process-step reveal reveal-delay-2">
+        <div class="step-dot">
+          <div class="step-dot-inner"></div>
+          <span class="step-num">02</span>
+        </div>
+        <div class="step-title">Propunerea</div>
+        <p class="step-text">Creăm o propunere vizuală personalizată. Tu aprobi, ajustezi, perfectăm împreună.</p>
+      </div>
+      <div class="process-step reveal reveal-delay-3">
+        <div class="step-dot">
+          <div class="step-dot-inner"></div>
+          <span class="step-num">03</span>
+        </div>
+        <div class="step-title">Crearea</div>
+        <p class="step-text">Fiecare aranjament este construit manual, cu atenție la fiecare detaliu. Primești o fotografie de confirmare.</p>
+      </div>
+      <div class="process-step reveal reveal-delay-4">
+        <div class="step-dot">
+          <div class="step-dot-inner"></div>
+          <span class="step-num">04</span>
+        </div>
+        <div class="step-title">Livrarea</div>
+        <p class="step-text">Livrăm personal în București, ambalat impecabil. Ziua ta începe perfect.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALE -->
+<section id="testimoniale">
+  <div class="section-inner">
+    <div class="section-label reveal">05 — Ce Spun Clienții</div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card reveal reveal-delay-1">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Nu îmi vine să cred că nu sunt flori reale. Toate invitații au întrebat de unde sunt. Buchetul meu arată perfect și după 6 luni."</p>
+        <div class="testimonial-author">Andreea M.</div>
+        <div class="testimonial-event">Nuntă · Septembrie 2025</div>
+      </div>
+      <div class="testimonial-card reveal reveal-delay-2">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Am ales pachetul Signature și a depășit orice așteptare. Culorile s-au potrivit perfect cu rochia și cu tema nunții."</p>
+        <div class="testimonial-author">Raluca & Mihai</div>
+        <div class="testimonial-event">Nuntă · Iulie 2025</div>
+      </div>
+      <div class="testimonial-card reveal reveal-delay-3">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Aranjamentele de la botezul fiicei mele au fost superbe. Toată lumea a vrut contactul. Profesionalism și eleganță în fiecare detaliu."</p>
+        <div class="testimonial-author">Diana P.</div>
+        <div class="testimonial-event">Botez · Octombrie 2025</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" style="background:var(--charcoal)">
+  <div class="section-inner">
+    <div class="section-label reveal">06 — Contact</div>
+    <div class="contact-grid">
+      <div>
+        <h2 class="contact-title reveal">Hai să creăm ceva <em>frumos împreună.</em></h2>
+        <p class="contact-text reveal">Spune-ne despre ziua ta specială și îți vom oferi o propunere personalizată în maxim 24 de ore.</p>
+        <div class="contact-items reveal">
+          <div class="contact-item">
+            <div class="contact-item-icon">📍</div>
+            București, România
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon">📱</div>
+            WhatsApp: 07XX XXX XXX
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon">✉️</div>
+            <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d5a3b0b9baa7b4fbb7a0b6a0a7b0a6a1bc95b2b8b4bcb9fbb6bab8">[email&#160;protected]</a>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon">🕐</div>
+            Luni–Sâmbătă, 09:00–20:00
+          </div>
+        </div>
+      </div>
+      <div class="reveal">
+        <div class="form-group">
+          <label>Numele tău</label>
+          <input type="text" placeholder="Maria Popescu">
+        </div>
+        <div class="form-group">
+          <label>Telefon / WhatsApp</label>
+          <input type="tel" placeholder="07XX XXX XXX">
+        </div>
+        <div class="form-group">
+          <label>Tipul evenimentului</label>
+          <select>
+            <option>Nuntă</option>
+            <option>Botez</option>
+            <option>Altul</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data evenimentului</label>
+          <input type="date">
+        </div>
+        <div class="form-group">
+          <label>Mesaj</label>
+          <textarea placeholder="Povestește-ne despre viziunea ta — culori, stil, număr de invitați..."></textarea>
+        </div>
+        <button class="btn-submit" onclick="handleSubmit()">Trimite Solicitarea</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand-name">VEL<span>ORA</span></div>
+      <div class="footer-tagline">Florile care rămân.</div>
+      <p class="footer-desc">Buchete premium pentru nunți și botezuri în București. Flori artificiale de lux, personalizate complet după viziunea ta.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Navigare</div>
+      <ul class="footer-links">
+        <li><a href="#despre">Despre Velora</a></li>
+        <li><a href="#colectii">Colecții & Prețuri</a></li>
+        <li><a href="#galerie">Galerie</a></li>
+        <li><a href="#proces">Cum funcționează</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Servicii</div>
+      <ul class="footer-links">
+        <li><a href="#">Buchete Mireasă</a></li>
+        <li><a href="#">Buchete Botez</a></li>
+        <li><a href="#">Aranjamente Masă</a></li>
+        <li><a href="#">Lumânări Decorative</a></li>
+        <li><a href="#">Pachete Corporate</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 Velora București. Toate drepturile rezervate.</span>
+    <div class="footer-social">
+      <a href="#">Instagram</a>
+      <a href="#">Facebook</a>
+      <a href="#">WhatsApp</a>
+    </div>
+  </div>
+</footer>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img class="lightbox-img" id="lightboxImg" src="" alt="">
+  <div class="lightbox-nav">
+    <button class="lightbox-btn" onclick="prevImg()">←</button>
+    <button class="lightbox-btn" onclick="nextImg()">→</button>
+  </div>
+  <div class="lightbox-counter" id="lightboxCounter"></div>
+</div>
+
+<!-- CHATBOT -->
+<div class="chat-btn" onclick="toggleChat()">🌸</div>
+<div class="chat-window" id="chatWindow">
+  <div class="chat-header">
+    <div>
+      <div class="chat-header-name">Velora Assistant 🤍</div>
+      <div class="chat-header-status">● Online acum</div>
+    </div>
+    <button class="chat-close-btn" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-quick-replies" id="quickReplies">
+    <button class="chat-quick-btn" onclick="quickReply('Prețuri & Colecții')">💰 Prețuri & Colecții</button>
+    <button class="chat-quick-btn" onclick="quickReply('Cum funcționează?')">❓ Cum funcționează?</button>
+    <button class="chat-quick-btn" onclick="quickReply('Vreau o ofertă')">🌸 Vreau o ofertă</button>
+  </div>
+  <div class="chat-input-area">
+    <input class="chat-input" id="chatInput" type="text" placeholder="Scrie un mesaj..." onkeypress="if(event.key==='Enter')sendChat()">
+    <button class="chat-send" onclick="sendChat()">→</button>
+  </div>
+</div>
+
+<!-- WHATSAPP FLOAT -->
+<a href="https://wa.me/40700000000" class="wa-float" target="_blank" title="Scrie-ne pe WhatsApp">💬</a>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// Cursor
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+document.addEventListener('mousemove', e => {
+  cursor.style.transform = `translate(${e.clientX - 4}px, ${e.clientY - 4}px)`;
+  ring.style.transform = `translate(${e.clientX - 16}px, ${e.clientY - 16}px)`;
+});
+
+// Nav scroll
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// Reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+    }
+  });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Form submit
+function handleSubmit() {
+  alert('Mulțumim! Te vom contacta în maxim 24 de ore. 🤍\n\nSau ne poți scrie direct pe WhatsApp pentru un răspuns imediat.');
+}
+
+// LIGHTBOX
+const allImages = [
+  'https://i.imgur.com/oMWlwXB.jpeg',
+  'https://i.imgur.com/XDyGc6G.jpeg',
+  'https://i.imgur.com/fN3C3DX.jpeg',
+  'https://i.imgur.com/X35eP3s.jpeg',
+  'https://i.imgur.com/7mrjSaI.jpeg'
+];
+const collectionGalleries = { esential:[0,1], signature:[2,3], atelier:[4,0] };
+let currentImages = [], currentIndex = 0;
+
+function openLightbox(idx) {
+  currentImages = allImages; currentIndex = idx;
+  showLightboxImage();
+  document.getElementById('lightbox').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function openCollectionGallery(col) {
+  currentImages = collectionGalleries[col].map(i => allImages[i]); currentIndex = 0;
+  showLightboxImage();
+  document.getElementById('lightbox').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function showLightboxImage() {
+  document.getElementById('lightboxImg').src = currentImages[currentIndex];
+  document.getElementById('lightboxCounter').textContent = (currentIndex+1) + ' / ' + currentImages.length;
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+function nextImg() { currentIndex = (currentIndex+1)%currentImages.length; showLightboxImage(); }
+function prevImg() { currentIndex = (currentIndex-1+currentImages.length)%currentImages.length; showLightboxImage(); }
+document.getElementById('lightbox').addEventListener('click', function(e){ if(e.target===this) closeLightbox(); });
+document.addEventListener('keydown', e => {
+  if(document.getElementById('lightbox').classList.contains('active')){
+    if(e.key==='ArrowRight') nextImg();
+    if(e.key==='ArrowLeft') prevImg();
+    if(e.key==='Escape') closeLightbox();
+  }
+});
+
+// CHATBOT
+let chatOpen=false, chatStarted=false;
+function toggleChat(){
+  chatOpen=!chatOpen;
+  document.getElementById('chatWindow').classList.toggle('open',chatOpen);
+  if(chatOpen && !chatStarted){ chatStarted=true; setTimeout(()=>addBotMessage('Bună ziua! Sunt asistentul Velora. 🌸\nCu ce vă pot ajuta astăzi?'),400); }
+}
+function addBotMessage(text){
+  const msgs=document.getElementById('chatMessages');
+  const div=document.createElement('div'); div.className='chat-msg bot'; div.style.whiteSpace='pre-line'; div.textContent=text;
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+}
+function addUserMessage(text){
+  const msgs=document.getElementById('chatMessages');
+  const div=document.createElement('div'); div.className='chat-msg user'; div.textContent=text;
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+}
+function quickReply(text){
+  document.getElementById('quickReplies').style.display='none';
+  addUserMessage(text); setTimeout(()=>respondTo(text),600);
+}
+function sendChat(){
+  const input=document.getElementById('chatInput'); const text=input.value.trim();
+  if(!text) return; input.value='';
+  document.getElementById('quickReplies').style.display='none';
+  addUserMessage(text); setTimeout(()=>respondTo(text),600);
+}
+function respondTo(text){
+  const t=text.toLowerCase();
+  if(t.includes('pret')||t.includes('cost')||t.includes('cat')||t.includes('colect'))
+    addBotMessage('Avem 3 colecții:\n\n✦ Esențial — de la 500 RON\n✦ Signature — de la 700 RON ⭐\n✦ Atelier Complet — de la 1.350 RON\n\nDoriți detalii?');
+  else if(t.includes('cum')||t.includes('functio')||t.includes('proces'))
+    addBotMessage('Procesul nostru:\n\n1. Ne contactați\n2. Creăm propunerea\n3. Avans 50% la confirmare\n4. Livrăm personal în București 🤍');
+  else if(t.includes('ofert')||t.includes('comand')||t.includes('vreau'))
+    addBotMessage('📱 WhatsApp: 07XX XXX XXX\n✉️ velora.bucuresti@gmail.com\n\nSau completați formularul de contact. Răspundem în 24 ore. 🌸');
+  else if(t.includes('livrare'))
+    addBotMessage('Livrăm personal în București și Ilfov. 📍\nLivrarea este inclusă în prețul pachetului.');
+  else if(t.includes('timp')||t.includes('cand'))
+    addBotMessage('Comenzile se onorează în 7-14 zile de la confirmare.\nUrgențe? Scrieți-ne pe WhatsApp. 🌸');
+  else if(t.includes('artific')||t.includes('real'))
+    addBotMessage('Florile noastre sunt artificiale premium — identice cu cele naturale în fotografii. ✦\nRămân perfecte pentru totdeauna. 🌸');
+  else
+    addBotMessage('Vă mulțumim! 🤍\n📱 WhatsApp: 07XX XXX XXX\n✉️ velora.bucuresti@gmail.com');
+}
+</script>
+</body>
+</html>
