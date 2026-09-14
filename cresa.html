@@ -117,6 +117,15 @@
   }
   .icon-btn:hover{ border-color:var(--accent); }
   .icon-btn:active{ transform:scale(.94); }
+  .sync-badge{
+    display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--success);
+    background:var(--success-soft); border-radius:999px; padding:7px 11px 7px 9px; letter-spacing:.02em;
+  }
+  .sync-badge:not(.on){ color:var(--muted); background:var(--surface-2); }
+  .sync-dot{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .sync-badge.on .sync-dot{ animation:pulse 1.8s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce){ .sync-badge.on .sync-dot{ animation:none; } }
+  @media (max-width:460px){ .sync-badge .sync-label{ display:none; } .sync-badge{ padding:8px; } }
 
   /* DEMO BANNER */
   .demo-banner{
@@ -384,6 +393,7 @@
       </div>
     </div>
     <div class="topbar-right">
+      <span class="sync-badge" id="syncBadge" hidden><span class="sync-dot"></span><span class="sync-label">Sincronizat</span></span>
       <time class="live-clock font-numeric" id="liveClock">--:--:--</time>
       <button class="icon-btn" id="themeToggle" aria-label="Schimbă tema">◐</button>
     </div>
@@ -532,9 +542,117 @@
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
   }
 
+  var ACTIVE_CHILD_KEY = 'pasi-mici-active-child-v1';
+  function loadActiveChildId(){ try{ return localStorage.getItem(ACTIVE_CHILD_KEY); }catch(e){ return null; } }
+  function saveActiveChildId(id){ try{ if(id) localStorage.setItem(ACTIVE_CHILD_KEY, id); }catch(e){} }
+
   var state = loadState();
   if(!state){ state = seedDemoState(); saveState(); }
+  var savedActiveId = loadActiveChildId();
+  if(savedActiveId && state.children.some(function(c){ return c.id===savedActiveId; })) state.activeChildId = savedActiveId;
   if(!state.activeChildId && state.children.length) state.activeChildId = state.children[0].id;
+
+  /* ---------- shared sync (db capability) ---------- */
+  var claudeApi = (typeof window!=='undefined' && window.claude && typeof window.claude.use==='function') ? window.claude : null;
+  var dbMode = false;
+  var dbApi = null, configRef = null, eventsCol = null;
+
+  function configFromState(s){
+    return { children:s.children, caregivers:s.caregivers, reasons:s.reasons, lastCaregiver:s.lastCaregiver, isDemo:!!s.isDemo };
+  }
+  function setSyncBadge(mode){
+    var el = document.getElementById('syncBadge'); if(!el) return;
+    if(mode==='synced'){ el.hidden=false; el.className='sync-badge on'; el.innerHTML='<span class="sync-dot"></span><span class="sync-label">Sincronizat</span>'; el.title='Datele se sincronizează live cu oricine altcineva are acest link deschis.'; }
+    else if(mode==='connecting'){ el.hidden=false; el.className='sync-badge'; el.innerHTML='<span class="sync-dot"></span><span class="sync-label">Se conectează…</span>'; el.title='Se conectează la sincronizare.'; }
+    else { el.hidden = true; }
+  }
+  function showDbErrorToast(err){
+    var msg = (err && err.code==='resource_exhausted') ? 'Prea multe modificări deodată, încearcă din nou în câteva secunde.' : 'Nu am putut salva pe server, încearcă din nou.';
+    showToast('⚠️ '+msg);
+  }
+  function eventDocData(ev){
+    return { childId:ev.childId, type:ev.type, ts:ev.ts, caregiver:ev.caregiver||'', reason:ev.reason||'', note:ev.note||'' };
+  }
+
+  function persistNewEvent(ev){
+    if(dbMode){ eventsCol.doc(ev.id).set(eventDocData(ev)).catch(showDbErrorToast); }
+    else { state.events.push(ev); saveState(); renderAll(); }
+  }
+  function persistUpdateEvent(id, fields){
+    if(dbMode){ eventsCol.doc(id).update(fields).catch(showDbErrorToast); }
+    else {
+      var ev = state.events.filter(function(e){ return e.id===id; })[0];
+      if(ev){ Object.assign(ev, fields); saveState(); renderAll(); }
+    }
+  }
+  function persistDeleteEvent(id){
+    if(dbMode){ eventsCol.doc(id).delete().catch(showDbErrorToast); }
+    else { state.events = state.events.filter(function(e){ return e.id!==id; }); saveState(); renderAll(); }
+  }
+  function persistConfig(fields){
+    Object.assign(state, fields);
+    if(dbMode){ configRef.update(fields).catch(showDbErrorToast); renderAll(); }
+    else { saveState(); renderAll(); }
+  }
+  function persistConfigReplace(fullState){
+    state = fullState;
+    if(dbMode){ configRef.set(configFromState(fullState)).catch(showDbErrorToast); renderAll(); }
+    else { saveState(); renderAll(); }
+  }
+  function wipeAllEventsDb(then){
+    eventsCol.get().then(function(qsnap){
+      var dels = qsnap.docs.map(function(d){ return eventsCol.doc(d.id).delete().catch(function(){}); });
+      Promise.all(dels).then(then, then);
+    }).catch(then);
+  }
+  function seedEventsIntoDb(events){
+    events.forEach(function(ev){ eventsCol.doc(ev.id).set(eventDocData(ev)).catch(function(){}); });
+  }
+
+  var unsubConfig=null, unsubEvents=null;
+  function subscribeDb(){
+    dbMode = true;
+    setSyncBadge('synced');
+    unsubConfig = configRef.onSnapshot(function(snap){
+      var data = snap.data() || {};
+      state.children = data.children || [];
+      state.caregivers = (data.caregivers && data.caregivers.length) ? data.caregivers : ['Mama','Tata','Bunica','Bunicul'];
+      state.reasons = (data.reasons && data.reasons.length) ? data.reasons : ['Boală','Vacanță','Sărbătoare legală','Alt motiv'];
+      state.lastCaregiver = data.lastCaregiver || state.caregivers[0] || '';
+      state.isDemo = !!data.isDemo;
+      if(!state.activeChildId || !state.children.some(function(c){ return c.id===state.activeChildId; })){
+        state.activeChildId = state.children.length ? state.children[0].id : null;
+      }
+      renderAll();
+    }, function(){ dbMode=false; setSyncBadge('off'); renderAll(); });
+
+    unsubEvents = eventsCol.orderBy('ts','desc').limit(1000).onSnapshot(function(qsnap){
+      state.events = qsnap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
+      renderAll();
+    }, function(){ /* keep last known events on transient errors */ });
+  }
+
+  function initDbMode(){
+    setSyncBadge('connecting');
+    configRef.get().then(function(snap){
+      if(!snap.exists){
+        var seed = seedDemoState();
+        configRef.set(configFromState(seed)).catch(function(){});
+        seedEventsIntoDb(seed.events);
+      }
+      subscribeDb();
+    }).catch(function(){ dbMode=false; setSyncBadge('off'); });
+  }
+
+  if(claudeApi){
+    claudeApi.use('db').then(function(db){
+      if(!db) return;
+      dbApi = db;
+      configRef = db.doc('config/main');
+      eventsCol = db.collection('events');
+      initDbMode();
+    }).catch(function(){});
+  }
 
   /* ---------- derived ---------- */
   function activeChild(){
@@ -630,47 +748,51 @@
   }
 
   /* ---------- actions ---------- */
-  function setActiveChild(id){ state.activeChildId=id; saveState(); renderAll(); }
+  function setActiveChild(id){ state.activeChildId=id; saveActiveChildId(id); renderAll(); }
 
   function logCheck(type){
     var child = activeChild(); if(!child) return;
     var ev = mkEvent(child.id, type, Date.now(), { caregiver: state.lastCaregiver });
-    state.events.push(ev); saveState(); renderAll();
+    persistNewEvent(ev);
     showToast((type==='in'?'Sosire înregistrată':'Plecare înregistrată')+' — '+fmtTime(ev.ts)+' · '+(ev.caregiver||'—'), ev.id);
   }
   function logAbsence(reason){
     var child = activeChild(); if(!child) return;
     var ev = mkEvent(child.id, 'absent', Date.now(), { reason: reason });
-    state.events.push(ev); saveState(); renderAll();
+    persistNewEvent(ev);
     showToast('Absență înregistrată — '+reason, ev.id);
   }
-  function undoEvent(id){ state.events = state.events.filter(function(e){ return e.id!==id; }); saveState(); renderAll(); hideToast(); }
-  function deleteEvent(id){ state.events = state.events.filter(function(e){ return e.id!==id; }); saveState(); renderAll(); }
-  function updateEvent(id, fields){
-    var ev = state.events.filter(function(e){ return e.id===id; })[0];
-    if(ev){ Object.assign(ev, fields); saveState(); renderAll(); }
-  }
+  function undoEvent(id){ persistDeleteEvent(id); hideToast(); }
+  function deleteEvent(id){ persistDeleteEvent(id); }
+  function updateEvent(id, fields){ persistUpdateEvent(id, fields); }
   function addManualEvent(fields){
     var child = activeChild(); if(!child) return;
     var ev = mkEvent(child.id, fields.type, fields.ts, { caregiver:fields.caregiver||'', reason:fields.reason||'', note:fields.note||'' });
-    state.events.push(ev); saveState(); renderAll();
+    persistNewEvent(ev);
   }
-  function setLastCaregiver(name){ state.lastCaregiver=name; saveState(); renderAzi(); }
+  function setLastCaregiver(name){ persistConfig({ lastCaregiver:name }); }
 
   function addChild(name, emoji, group){
     var c = { id:uid(), name:name, emoji:emoji, group:group||'' };
-    state.children.push(c); state.activeChildId=c.id; state.isDemo=false; saveState(); renderAll();
+    var newChildren = state.children.concat([c]);
+    state.activeChildId = c.id; saveActiveChildId(c.id);
+    persistConfig({ children:newChildren, isDemo:false });
   }
   function removeChild(id){
-    state.children = state.children.filter(function(c){ return c.id!==id; });
-    state.events = state.events.filter(function(e){ return e.childId!==id; });
-    if(state.activeChildId===id) state.activeChildId = state.children.length? state.children[0].id : null;
-    saveState(); renderAll();
+    var newChildren = state.children.filter(function(c){ return c.id!==id; });
+    var removedEvents = state.events.filter(function(e){ return e.childId===id; });
+    if(state.activeChildId===id){
+      state.activeChildId = newChildren.length ? newChildren[0].id : null;
+      saveActiveChildId(state.activeChildId);
+    }
+    if(dbMode) removedEvents.forEach(function(e){ eventsCol.doc(e.id).delete().catch(function(){}); });
+    else state.events = state.events.filter(function(e){ return e.childId!==id; });
+    persistConfig({ children:newChildren });
   }
-  function addCaregiver(name){ if(!name) return; if(state.caregivers.indexOf(name)===-1){ state.caregivers.push(name); saveState(); renderAll(); } }
-  function removeCaregiver(name){ state.caregivers = state.caregivers.filter(function(c){ return c!==name; }); saveState(); renderAll(); }
-  function addReason(name){ if(!name) return; if(state.reasons.indexOf(name)===-1){ state.reasons.push(name); saveState(); renderAll(); } }
-  function removeReason(name){ state.reasons = state.reasons.filter(function(r){ return r!==name; }); saveState(); renderAll(); }
+  function addCaregiver(name){ if(!name || state.caregivers.indexOf(name)>-1) return; persistConfig({ caregivers: state.caregivers.concat([name]) }); }
+  function removeCaregiver(name){ persistConfig({ caregivers: state.caregivers.filter(function(c){ return c!==name; }) }); }
+  function addReason(name){ if(!name || state.reasons.indexOf(name)>-1) return; persistConfig({ reasons: state.reasons.concat([name]) }); }
+  function removeReason(name){ persistConfig({ reasons: state.reasons.filter(function(r){ return r!==name; }) }); }
 
   function setTheme(t){
     state.theme = t; saveState();
@@ -680,16 +802,18 @@
   }
 
   function clearDemoAndStart(){
-    var kept = { name:'', emoji:'🦊' };
     var fresh = defaultState();
     fresh.theme = state.theme;
     fresh.isDemo = false;
-    state = fresh; saveState(); renderAll();
-    openAddChildModal();
+    if(dbMode){ wipeAllEventsDb(function(){ persistConfigReplace(fresh); openAddChildModal(); }); }
+    else { persistConfigReplace(fresh); openAddChildModal(); }
   }
   function resetAll(){
     localStorage.removeItem(STORAGE_KEY);
-    state = seedDemoState(); saveState(); renderAll();
+    var seed = seedDemoState();
+    seed.theme = state.theme;
+    if(dbMode){ wipeAllEventsDb(function(){ persistConfigReplace(seed); seedEventsIntoDb(seed.events); }); }
+    else { persistConfigReplace(seed); }
   }
 
   function exportJSON(){
@@ -706,8 +830,9 @@
       try{
         var s = JSON.parse(String(reader.result));
         if(!s || !Array.isArray(s.children) || !Array.isArray(s.events)) throw new Error('format invalid');
-        state = s; saveState(); renderAll();
-        showToast('Backup importat cu succes.');
+        s.theme = state.theme;
+        if(dbMode){ wipeAllEventsDb(function(){ persistConfigReplace(s); seedEventsIntoDb(s.events); showToast('Backup importat și sincronizat.'); }); }
+        else { persistConfigReplace(s); showToast('Backup importat cu succes.'); }
       }catch(e){ alert('Fișierul nu pare a fi un backup valid Pași Mici.'); }
     };
     reader.readAsText(file);
@@ -1206,8 +1331,14 @@
         '</div>'+
       '</div>'+
       '<div class="settings-card">'+
+        '<div class="settings-title">Sincronizare între telefoane</div>'+
+        (dbMode
+          ? '<div class="settings-hint">🔗 Activă — oricine deschide acest link (mama, tata...) vede și înregistrează pe aceleași date, live. Tema (luminos/întunecat) rămâne separată pe fiecare telefon.</div>'
+          : '<div class="settings-hint">Datele stau doar în acest browser, pe acest telefon. Pentru sincronizare live între mai multe telefoane, folosește linkul artifactului Pași Mici (nu fișierul .html descărcat) și partajează-l cu celălalt părinte din meniul de share.</div>')+
+      '</div>'+
+      '<div class="settings-card">'+
         '<div class="settings-title">Datele tale</div>'+
-        '<div class="settings-hint">Totul e salvat local, în acest browser. Fă un backup periodic ca să nu pierzi istoricul.</div>'+
+        '<div class="settings-hint">Fă un backup periodic (.json) ca să nu pierzi istoricul, indiferent de mod.</div>'+
         '<div class="btn-row">'+
           '<button class="btn" type="button" id="exportJsonBtn">⭳ Descarcă backup (.json)</button>'+
           '<label class="btn file-label">⭱ Restaurează backup<input type="file" id="importJsonInput" accept="application/json"></label>'+
