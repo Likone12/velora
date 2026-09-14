@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#4A5FE0">
-<meta name="description" content="Pași Mici — condică digitală pentru evidența zilnică la creșă: sosiri, plecări și absențe într-o atingere, cu calendar, statistici, istoric editabil și sincronizare între telefoane.">
+<meta name="description" content="Pași Mici — condică digitală pentru evidența zilnică la creșă: sosiri, plecări și absențe într-o atingere, cu calendar, statistici, istoric editabil, reminder-e cu export în calendar și sincronizare între telefoane.">
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -182,6 +182,21 @@
   @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
   @media (prefers-reduced-motion: reduce){ .status-dot.pulse{ animation:none; } }
   .status-date{ font-size:12.5px; color:var(--muted); font-family:var(--font-mono); }
+
+  /* REMINDER BANNER + ROWS */
+  .reminder-banner{
+    display:flex; align-items:center; gap:12px; background:var(--warn-soft); border:1px solid var(--warn);
+    border-radius:var(--radius-m); padding:14px 16px; font-size:13.5px; cursor:pointer; color:var(--ink);
+  }
+  .reminder-banner span:first-child{ font-size:20px; flex-shrink:0; }
+  .reminder-banner strong{ color:var(--warn); }
+  .rem-check{
+    width:24px; height:24px; border-radius:50%; border:1.5px solid var(--line); background:var(--surface);
+    color:var(--success); font-size:12px; font-weight:800; cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; margin-top:2px; padding:0;
+  }
+  .ledger-row.done .rem-check{ background:var(--success-soft); border-color:var(--success); }
+  .ledger-row.done .tl-title{ text-decoration:line-through; color:var(--muted); }
 
   .status-headline{ font-family:var(--font-display); font-size:30px; font-weight:600; line-height:1.15; margin-bottom:4px; }
   .status-sub{ font-size:13.5px; color:var(--muted); margin-bottom:20px; }
@@ -416,12 +431,14 @@
   <main class="view" id="view-azi"></main>
   <main class="view" id="view-calendar" hidden></main>
   <main class="view" id="view-condica" hidden></main>
+  <main class="view" id="view-reminder" hidden></main>
   <main class="view" id="view-setari" hidden></main>
 
   <nav class="tabbar" id="tabbar">
     <button class="tab active" data-view="azi" type="button">🏠<span>Azi</span></button>
     <button class="tab" data-view="calendar" type="button">🗓️<span>Calendar</span></button>
     <button class="tab" data-view="condica" type="button">📖<span>Condică</span></button>
+    <button class="tab" data-view="reminder" type="button">🔔<span>Reminder</span></button>
     <button class="tab" data-view="setari" type="button">⚙️<span>Setări</span></button>
   </nav>
 </div>
@@ -484,10 +501,12 @@
       reasons: ['Boală','Vacanță','Sărbătoare legală','Alt motiv'],
       lastCaregiver: 'Mama',
       events: [],
+      reminders: [],
       theme: 'system',
       isDemo: false
     };
   }
+  function addDays(d,n){ var nd=new Date(d); nd.setDate(nd.getDate()+n); return nd; }
 
   function mkEvent(childId, type, ts, extra){
     return Object.assign({ id:uid(), childId:childId, type:type, ts:ts, caregiver:'', reason:'', note:'' }, extra||{});
@@ -533,6 +552,10 @@
     });
     s.events = events;
     s.lastCaregiver = 'Mama';
+    s.reminders = [
+      { id:uid(), childId:child.id, title:'🏊 Înot', date: toInputDate(addDays(today,3).getTime()), time:'17:00', note:'Aduce costum și prosop.', done:false },
+      { id:uid(), childId:child.id, title:'🩺 Control pediatru', date: toInputDate(addDays(today,9).getTime()), time:'10:30', note:'', done:false }
+    ];
     return s;
   }
 
@@ -562,7 +585,7 @@
   /* ---------- shared sync (db capability) ---------- */
   var claudeApi = (typeof window!=='undefined' && window.claude && typeof window.claude.use==='function') ? window.claude : null;
   var dbMode = false;
-  var dbApi = null, configRef = null, eventsCol = null;
+  var dbApi = null, configRef = null, eventsCol = null, remindersCol = null;
 
   function configFromState(s){
     return { children:s.children, caregivers:s.caregivers, reasons:s.reasons, lastCaregiver:s.lastCaregiver, isDemo:!!s.isDemo };
@@ -580,6 +603,9 @@
   function eventDocData(ev){
     return { childId:ev.childId, type:ev.type, ts:ev.ts, caregiver:ev.caregiver||'', reason:ev.reason||'', note:ev.note||'' };
   }
+  function reminderDocData(r){
+    return { childId:r.childId||'', title:r.title, date:r.date, time:r.time||'', note:r.note||'', done:!!r.done };
+  }
 
   function persistNewEvent(ev){
     if(dbMode){ eventsCol.doc(ev.id).set(eventDocData(ev)).catch(showDbErrorToast); }
@@ -596,6 +622,21 @@
     if(dbMode){ eventsCol.doc(id).delete().catch(showDbErrorToast); }
     else { state.events = state.events.filter(function(e){ return e.id!==id; }); saveState(); renderAll(); }
   }
+  function persistNewReminder(r){
+    if(dbMode){ remindersCol.doc(r.id).set(reminderDocData(r)).catch(showDbErrorToast); }
+    else { state.reminders.push(r); saveState(); renderAll(); }
+  }
+  function persistUpdateReminder(id, fields){
+    if(dbMode){ remindersCol.doc(id).update(fields).catch(showDbErrorToast); }
+    else {
+      var r = state.reminders.filter(function(x){ return x.id===id; })[0];
+      if(r){ Object.assign(r, fields); saveState(); renderAll(); }
+    }
+  }
+  function persistDeleteReminder(id){
+    if(dbMode){ remindersCol.doc(id).delete().catch(showDbErrorToast); }
+    else { state.reminders = state.reminders.filter(function(x){ return x.id!==id; }); saveState(); renderAll(); }
+  }
   function persistConfig(fields){
     Object.assign(state, fields);
     if(dbMode){ configRef.update(fields).catch(showDbErrorToast); renderAll(); }
@@ -606,17 +647,20 @@
     if(dbMode){ configRef.set(configFromState(fullState)).catch(showDbErrorToast); renderAll(); }
     else { saveState(); renderAll(); }
   }
-  function wipeAllEventsDb(then){
-    eventsCol.get().then(function(qsnap){
-      var dels = qsnap.docs.map(function(d){ return eventsCol.doc(d.id).delete().catch(function(){}); });
+  function wipeCollectionDb(col, then){
+    col.get().then(function(qsnap){
+      var dels = qsnap.docs.map(function(d){ return col.doc(d.id).delete().catch(function(){}); });
       Promise.all(dels).then(then, then);
     }).catch(then);
   }
   function seedEventsIntoDb(events){
     events.forEach(function(ev){ eventsCol.doc(ev.id).set(eventDocData(ev)).catch(function(){}); });
   }
+  function seedRemindersIntoDb(reminders){
+    reminders.forEach(function(r){ remindersCol.doc(r.id).set(reminderDocData(r)).catch(function(){}); });
+  }
 
-  var unsubConfig=null, unsubEvents=null;
+  var unsubConfig=null, unsubEvents=null, unsubReminders=null;
   function subscribeDb(){
     dbMode = true;
     setSyncBadge('synced');
@@ -637,6 +681,11 @@
       state.events = qsnap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
       renderAll();
     }, function(){ /* keep last known events on transient errors */ });
+
+    unsubReminders = remindersCol.orderBy('date','asc').limit(500).onSnapshot(function(qsnap){
+      state.reminders = qsnap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
+      renderAll();
+    }, function(){ /* keep last known reminders on transient errors */ });
   }
 
   function initDbMode(){
@@ -646,6 +695,7 @@
         var seed = seedDemoState();
         configRef.set(configFromState(seed)).catch(function(){});
         seedEventsIntoDb(seed.events);
+        seedRemindersIntoDb(seed.reminders);
       }
       subscribeDb();
     }).catch(function(){ dbMode=false; setSyncBadge('off'); });
@@ -657,6 +707,7 @@
       dbApi = db;
       configRef = db.doc('config/main');
       eventsCol = db.collection('events');
+      remindersCol = db.collection('reminders');
       initDbMode();
     }).catch(function(){});
   }
@@ -812,15 +863,23 @@
     var fresh = defaultState();
     fresh.theme = state.theme;
     fresh.isDemo = false;
-    if(dbMode){ wipeAllEventsDb(function(){ persistConfigReplace(fresh); openAddChildModal(); }); }
-    else { persistConfigReplace(fresh); openAddChildModal(); }
+    if(dbMode){
+      wipeCollectionDb(eventsCol, function(){
+        wipeCollectionDb(remindersCol, function(){ persistConfigReplace(fresh); openAddChildModal(); });
+      });
+    } else { persistConfigReplace(fresh); openAddChildModal(); }
   }
   function resetAll(){
     localStorage.removeItem(STORAGE_KEY);
     var seed = seedDemoState();
     seed.theme = state.theme;
-    if(dbMode){ wipeAllEventsDb(function(){ persistConfigReplace(seed); seedEventsIntoDb(seed.events); }); }
-    else { persistConfigReplace(seed); }
+    if(dbMode){
+      wipeCollectionDb(eventsCol, function(){
+        wipeCollectionDb(remindersCol, function(){
+          persistConfigReplace(seed); seedEventsIntoDb(seed.events); seedRemindersIntoDb(seed.reminders);
+        });
+      });
+    } else { persistConfigReplace(seed); }
   }
 
   function exportJSON(){
@@ -837,10 +896,17 @@
       try{
         var s = JSON.parse(String(reader.result));
         if(!s || !Array.isArray(s.children) || !Array.isArray(s.events)) throw new Error('format invalid');
+        s.reminders = Array.isArray(s.reminders) ? s.reminders : [];
         s.theme = state.theme;
-        if(dbMode){ wipeAllEventsDb(function(){ persistConfigReplace(s); seedEventsIntoDb(s.events); showToast('Backup importat și sincronizat.'); }); }
-        else { persistConfigReplace(s); showToast('Backup importat cu succes.'); }
-      }catch(e){ alert('Fișierul nu pare a fi un backup valid Pași Mici.'); }
+        if(dbMode){
+          wipeCollectionDb(eventsCol, function(){
+            wipeCollectionDb(remindersCol, function(){
+              persistConfigReplace(s); seedEventsIntoDb(s.events); seedRemindersIntoDb(s.reminders);
+              showToast('Backup importat și sincronizat.');
+            });
+          });
+        } else { persistConfigReplace(s); showToast('Backup importat cu succes.'); }
+      }catch(e){ alertModal('Fișierul nu pare a fi un backup valid Pași Mici.'); }
     };
     reader.readAsText(file);
   }
@@ -889,6 +955,28 @@
   }
   function closeModal(){ document.getElementById('modalBackdrop').hidden = true; document.getElementById('modal').innerHTML=''; }
   document.getElementById('modalBackdrop').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+  function confirmAction(message, onYes, opts){
+    opts = opts || {};
+    openModal(
+      '<h3>'+escapeHtml(opts.title||'Confirmare')+'</h3>'+
+      '<p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:22px;">'+escapeHtml(message)+'</p>'+
+      '<div class="modal-actions">'+
+        '<button class="btn" type="button" id="confirmNoBtn">Renunță</button>'+
+        '<button class="btn '+(opts.danger?'danger':'primary')+'" type="button" id="confirmYesBtn">'+escapeHtml(opts.confirmLabel||'Confirmă')+'</button>'+
+      '</div>'
+    );
+    document.getElementById('confirmNoBtn').addEventListener('click', closeModal);
+    document.getElementById('confirmYesBtn').addEventListener('click', function(){ closeModal(); onYes(); });
+  }
+  function alertModal(message){
+    openModal(
+      '<h3>Atenție</h3>'+
+      '<p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:22px;">'+escapeHtml(message)+'</p>'+
+      '<div class="modal-actions"><button class="btn primary" type="button" id="alertOkBtn">OK</button></div>'
+    );
+    document.getElementById('alertOkBtn').addEventListener('click', closeModal);
+  }
 
   function openAddChildModal(){
     var emojiHtml = EMOJI_CHOICES.map(function(em,i){ return '<button type="button" class="chip emoji-pick'+(i===0?' active':'')+'" data-emoji="'+em+'">'+em+'</button>'; }).join('');
@@ -976,13 +1064,14 @@
   var currentView = 'azi';
   function switchView(name){
     currentView = name;
-    ['azi','calendar','condica','setari'].forEach(function(v){
+    ['azi','calendar','condica','reminder','setari'].forEach(function(v){
       document.getElementById('view-'+v).hidden = (v!==name);
     });
     document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.getAttribute('data-view')===name); });
     if(name==='azi') renderAzi();
     if(name==='calendar') renderCalendar();
     if(name==='condica') renderCondica();
+    if(name==='reminder') renderReminder();
     if(name==='setari') renderSetari();
   }
   document.getElementById('tabbar').addEventListener('click', function(e){
@@ -1058,6 +1147,7 @@
     var tlHtml = todays.length ? todays.map(timelineRowHtml).join('') : '<p class="empty-note">Încă nimic înregistrat azi.</p>';
 
     root.innerHTML =
+      upcomingReminderBanner()+
       '<div class="status-card">'+
         '<div class="status-top">'+badgeHtml+'<span class="status-date font-numeric">'+fmtDateLong(Date.now())+'</span></div>'+
         '<h2 class="status-headline">'+headline+'</h2>'+
@@ -1087,6 +1177,8 @@
     if(cancelAbs) cancelAbs.addEventListener('click', function(){ deleteEvent(st.ev.id); });
 
     bindTimelineActions(document.getElementById('todayTimeline'));
+    var remBannerEl = root.querySelector('[data-open-reminder]');
+    if(remBannerEl) remBannerEl.addEventListener('click', function(){ switchView('reminder'); });
   }
 
   function timelineRowHtml(e){
@@ -1104,7 +1196,10 @@
       var ed = e.target.closest('[data-edit]');
       var del = e.target.closest('[data-del]');
       if(ed){ var ev = state.events.filter(function(x){return x.id===ed.getAttribute('data-edit');})[0]; if(ev) openEventModal(ev); }
-      if(del){ if(confirm('Ștergi această înregistrare?')) deleteEvent(del.getAttribute('data-del')); }
+      if(del){
+        var delId = del.getAttribute('data-del');
+        confirmAction('Ștergi această înregistrare din condică?', function(){ deleteEvent(delId); }, { danger:true, confirmLabel:'Șterge' });
+      }
     });
   }
 
@@ -1294,6 +1389,151 @@
     '</div>';
   }
 
+  /* ---------- render: reminder ---------- */
+  function fmtRomDateShort(dateStr){
+    var p = dateStr.split('-'); var d = new Date(+p[0], +p[1]-1, +p[2]);
+    return d.getDate()+' '+MONTHS[d.getMonth()].slice(0,3);
+  }
+  function upcomingReminderBanner(){
+    var todayKey = toInputDate(Date.now());
+    var due = state.reminders.filter(function(r){ return !r.done && r.date<=todayKey; }).sort(function(a,b){ return a.date<b.date?-1:(a.date>b.date?1:0); });
+    if(!due.length) return '';
+    var r = due[0];
+    var label = r.date===todayKey ? 'Azi' : 'Restant din '+fmtRomDateShort(r.date);
+    return '<div class="reminder-banner" data-open-reminder="1"><span>🔔</span><div><strong>'+escapeHtml(label)+(r.time?', ora '+escapeHtml(r.time):'')+':</strong> '+escapeHtml(r.title)+'</div></div>';
+  }
+  function icsEscape(s){ return String(s).replace(/[\\;,]/g, function(c){ return '\\'+c; }).replace(/\n/g,'\\n'); }
+  function reminderTimeWindow(r){
+    if(r.time){
+      var startD = r.date.replace(/-/g,'')+'T'+r.time.replace(':','')+'00';
+      var p = r.time.split(':'); var d = new Date(2000,0,1,+p[0],+p[1]); d.setHours(d.getHours()+1);
+      var endD = r.date.replace(/-/g,'')+'T'+pad2(d.getHours())+pad2(d.getMinutes())+'00';
+      return { allDay:false, start:startD, end:endD };
+    }
+    var nd = new Date(r.date+'T00:00:00'); nd.setDate(nd.getDate()+1);
+    return { allDay:true, start:r.date.replace(/-/g,''), end:toInputDate(nd.getTime()).replace(/-/g,'') };
+  }
+  function buildICS(r, child){
+    var w = reminderTimeWindow(r);
+    var title = r.title+(child? ' — '+child.name : '');
+    var lines = [
+      'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//PasiMici//RO','CALSCALE:GREGORIAN','BEGIN:VEVENT',
+      'UID:'+r.id+'@pasimici',
+      'DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z',
+      w.allDay ? 'DTSTART;VALUE=DATE:'+w.start : 'DTSTART:'+w.start,
+      w.allDay ? 'DTEND;VALUE=DATE:'+w.end : 'DTEND:'+w.end,
+      'SUMMARY:'+icsEscape(title),
+      r.note ? 'DESCRIPTION:'+icsEscape(r.note) : '',
+      'END:VEVENT','END:VCALENDAR'
+    ].filter(Boolean);
+    return lines.join('\r\n');
+  }
+  function downloadICS(r, child){
+    var blob = new Blob([buildICS(r, child)], {type:'text/calendar;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'reminder-'+r.date+'.ics';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+  function googleCalendarUrl(r, child){
+    var w = reminderTimeWindow(r);
+    var title = r.title+(child? ' — '+child.name : '');
+    var params = 'action=TEMPLATE&text='+encodeURIComponent(title)+'&dates='+w.start+'/'+w.end+'&details='+encodeURIComponent(r.note||'');
+    return 'https://calendar.google.com/calendar/render?'+params;
+  }
+  function reminderRowHtml(r, child){
+    var dateLabel = fmtRomDateShort(r.date)+(r.time?', '+r.time:'');
+    var iconBtnStyle = 'width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;';
+    return '<div class="ledger-row'+(r.done?' done':'')+'">'+
+      '<button type="button" class="rem-check" data-toggle-done="'+r.id+'" title="'+(r.done?'Marchează nerezolvat':'Marchează rezolvat')+'">'+(r.done?'✓':'')+'</button>'+
+      '<div class="ledger-body">'+
+        '<div class="ledger-meta font-numeric">'+dateLabel+'</div>'+
+        '<div class="tl-title">'+escapeHtml(r.title)+'</div>'+
+        (r.note?'<div class="ledger-note">'+escapeHtml(r.note)+'</div>':'')+
+      '</div>'+
+      '<div class="ledger-actions">'+
+        '<button type="button" data-ics="'+r.id+'" title="Adaugă în Calendar (iPhone)" style="'+iconBtnStyle+'">📅</button>'+
+        '<a href="'+googleCalendarUrl(r, child)+'" target="_blank" rel="noopener" title="Adaugă în Google Calendar" style="'+iconBtnStyle+'">🗓️</a>'+
+        '<button type="button" data-del-rem="'+r.id+'" title="Șterge" style="'+iconBtnStyle+'">🗑</button>'+
+      '</div>'+
+    '</div>';
+  }
+  function renderReminder(){
+    var root = document.getElementById('view-reminder');
+    var child = activeChild();
+    var todayKey = toInputDate(Date.now());
+    var all = state.reminders.slice().sort(function(a,b){
+      var ka=a.date+(a.time||'00:00'), kb=b.date+(b.time||'00:00');
+      return ka<kb?-1:(ka>kb?1:0);
+    });
+    var overdue = all.filter(function(r){ return !r.done && r.date<todayKey; });
+    var upcoming = all.filter(function(r){ return !r.done && r.date>=todayKey; });
+    var done = all.filter(function(r){ return r.done; });
+
+    function section(title, list){
+      if(!list.length) return '';
+      return '<div class="section-head" style="margin-top:20px;"><span class="section-title">'+title+'</span><span class="section-hint">'+list.length+'</span></div>'+
+        '<div class="timeline" style="margin-top:8px;">'+list.map(function(r){ return reminderRowHtml(r, child); }).join('')+'</div>';
+    }
+
+    root.innerHTML =
+      '<div class="settings-card">'+
+        '<div class="settings-title">Adaugă un reminder'+(child?' pentru '+escapeHtml(child.name):'')+'</div>'+
+        '<div class="settings-hint">Programează o vizită, o activitate — apoi îl adaugi în calendarul telefonului ca să primești chiar și alarmă/notificare la ora respectivă.</div>'+
+        '<div class="chip-row" id="reminderPresets">'+
+          '<button type="button" class="chip" data-preset="🏊 Înot">🏊 Înot</button>'+
+          '<button type="button" class="chip" data-preset="🩺 Doctor">🩺 Doctor</button>'+
+          '<button type="button" class="chip" data-preset="💉 Vaccin">💉 Vaccin</button>'+
+          '<button type="button" class="chip" data-preset="👨‍👩‍👧 Ședință părinți">👨‍👩‍👧 Ședință</button>'+
+        '</div>'+
+        '<div class="form-row" style="margin-top:14px;"><label>Ce</label><input type="text" id="remTitle" placeholder="ex: Înot"></div>'+
+        '<div class="form-grid2">'+
+          '<div class="form-row"><label>Data</label><input type="date" id="remDate" value="'+todayKey+'"></div>'+
+          '<div class="form-row"><label>Ora (opțional)</label><input type="time" id="remTime"></div>'+
+        '</div>'+
+        '<div class="form-row"><label>Notă (opțional)</label><input type="text" id="remNote" placeholder="ex: aduce costum de baie"></div>'+
+        '<button class="btn primary" type="button" id="addReminderBtn" style="width:100%;">+ Adaugă reminder</button>'+
+      '</div>'+
+      section('Restante', overdue)+
+      section('Următoarele', upcoming)+
+      section('Rezolvate', done)+
+      (!all.length ? '<p class="empty-note">Niciun reminder încă — adaugă unul mai sus.</p>' : '');
+
+    document.getElementById('reminderPresets').addEventListener('click', function(e){
+      var b = e.target.closest('[data-preset]'); if(!b) return;
+      document.getElementById('remTitle').value = b.getAttribute('data-preset');
+    });
+    document.getElementById('addReminderBtn').addEventListener('click', function(){
+      var title = document.getElementById('remTitle').value.trim();
+      var date = document.getElementById('remDate').value;
+      if(!title || !date) return;
+      var r = { id:uid(), childId: child?child.id:'', title:title, date:date, time:document.getElementById('remTime').value||'', note:document.getElementById('remNote').value.trim(), done:false };
+      persistNewReminder(r);
+      document.getElementById('remTitle').value=''; document.getElementById('remNote').value=''; document.getElementById('remTime').value='';
+    });
+    root.querySelectorAll('[data-toggle-done]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var id = b.getAttribute('data-toggle-done');
+        var r = state.reminders.filter(function(x){ return x.id===id; })[0];
+        if(r) persistUpdateReminder(id, { done: !r.done });
+      });
+    });
+    root.querySelectorAll('[data-ics]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var id = b.getAttribute('data-ics');
+        var r = state.reminders.filter(function(x){ return x.id===id; })[0];
+        if(r) downloadICS(r, child);
+      });
+    });
+    root.querySelectorAll('[data-del-rem]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var id = b.getAttribute('data-del-rem');
+        confirmAction('Ștergi acest reminder?', function(){ persistDeleteReminder(id); }, { danger:true, confirmLabel:'Șterge' });
+      });
+    });
+  }
+
   /* ---------- render: setari ---------- */
   function renderSetari(){
     var root = document.getElementById('view-setari');
@@ -1353,7 +1593,12 @@
         '</div>'+
       '</div>';
 
-    root.querySelectorAll('[data-rm-child]').forEach(function(b){ b.addEventListener('click', function(){ if(confirm('Ștergi acest copil și toate înregistrările lui?')) removeChild(b.getAttribute('data-rm-child')); }); });
+    root.querySelectorAll('[data-rm-child]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var cid = b.getAttribute('data-rm-child');
+        confirmAction('Ștergi acest copil și toate înregistrările lui? Acțiunea nu poate fi anulată.', function(){ removeChild(cid); }, { danger:true, confirmLabel:'Șterge copilul' });
+      });
+    });
     root.querySelectorAll('[data-rm-cg]').forEach(function(b){ b.addEventListener('click', function(){ removeCaregiver(b.getAttribute('data-rm-cg')); }); });
     root.querySelectorAll('[data-rm-reason]').forEach(function(b){ b.addEventListener('click', function(){ removeReason(b.getAttribute('data-rm-reason')); }); });
     document.getElementById('openAddChild').addEventListener('click', openAddChildModal);
@@ -1371,7 +1616,7 @@
       if(e.target.files && e.target.files[0]) importJSONFile(e.target.files[0]);
     });
     document.getElementById('resetAllBtn').addEventListener('click', function(){
-      if(confirm('Sigur ștergi toate datele și revii la exemplul inițial? Acțiunea nu poate fi anulată.')) resetAll();
+      confirmAction('Sigur ștergi toate datele și revii la exemplul inițial? Acțiunea nu poate fi anulată.', resetAll, { danger:true, confirmLabel:'Șterge tot' });
     });
   }
 
@@ -1384,7 +1629,7 @@
 
   /* ---------- demo banner ---------- */
   document.getElementById('clearDemoBtn').addEventListener('click', function(){
-    if(confirm('Ștergi datele exemplu și pornești cu o pagină curată?')) clearDemoAndStart();
+    confirmAction('Ștergi datele exemplu și pornești cu o pagină curată?', clearDemoAndStart, { confirmLabel:'Pornește curat' });
   });
 
   /* ---------- clock ---------- */
@@ -1400,6 +1645,7 @@
     if(currentView==='azi') renderAzi();
     else if(currentView==='calendar') renderCalendar();
     else if(currentView==='condica') renderCondica();
+    else if(currentView==='reminder') renderReminder();
     else if(currentView==='setari') renderSetari();
   }
 
