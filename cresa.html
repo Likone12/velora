@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4A5FE0">
+<meta name="description" content="Pași Mici — condică digitală pentru evidența zilnică la creșă: sosiri, plecări și absențe într-o atingere, cu calendar, statistici și istoric editabil, salvate local pe acest dispozitiv.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%92%3C/text%3E%3C/svg%3E">
+<title>Pași Mici</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --paper:#F1F4FA;
+    --surface:#FFFFFF;
+    --surface-2:#E7ECF6;
+    --ink:#1E2430;
+    --muted:#5C6478;
+    --line:#D8DEEA;
+    --accent:#4A5FE0;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#E4E8FC;
+    --success:#3F9D6B;
+    --success-soft:#DFF2E7;
+    --warn:#B8781F;
+    --warn-soft:#F6E7CF;
+    --critical:#C23F51;
+    --critical-soft:#F8DEE1;
+    --shadow: 0 1px 2px rgba(30,36,48,.06), 0 8px 24px -12px rgba(30,36,48,.18);
+    --radius-s:10px;
+    --radius-m:16px;
+    --radius-l:22px;
+    --font-display:'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body:'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#10131C;
+      --surface:#181C28;
+      --surface-2:#1F2433;
+      --ink:#E9ECF6;
+      --muted:#96A0BC;
+      --line:#2B3244;
+      --accent:#8B98F5;
+      --accent-ink:#161A2B;
+      --accent-soft:#262C47;
+      --success:#6FCB98;
+      --success-soft:#1E3327;
+      --warn:#E7B45F;
+      --warn-soft:#3A2E17;
+      --critical:#EF8A98;
+      --critical-soft:#3A2027;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 28px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#10131C;
+    --surface:#181C28;
+    --surface-2:#1F2433;
+    --ink:#E9ECF6;
+    --muted:#96A0BC;
+    --line:#2B3244;
+    --accent:#8B98F5;
+    --accent-ink:#161A2B;
+    --accent-soft:#262C47;
+    --success:#6FCB98;
+    --success-soft:#1E3327;
+    --warn:#E7B45F;
+    --warn-soft:#3A2E17;
+    --critical:#EF8A98;
+    --critical-soft:#3A2027;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 28px -14px rgba(0,0,0,.6);
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  p{ margin:0; }
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-body);
+    padding:0 0 28px;
+    min-height:100vh;
+  }
+  .font-numeric{ font-variant-numeric:tabular-nums; }
+  button{ font-family:inherit; }
+  h1,h2,h3{ font-family:var(--font-display); text-wrap:balance; margin:0; }
+  ::selection{ background:var(--accent-soft); }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:6px; }
+
+  .app{ max-width:720px; margin:0 auto; padding:0 18px; }
+
+  /* TOPBAR */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 0 14px; gap:12px;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width:44px; height:44px; border-radius:14px;
+    background:var(--accent-soft); display:flex; align-items:center; justify-content:center;
+    font-size:22px; flex-shrink:0;
+  }
+  .brand-text{ display:flex; flex-direction:column; line-height:1.15; }
+  .brand-name{ font-family:var(--font-display); font-style:italic; font-weight:600; font-size:22px; letter-spacing:.01em; }
+  .brand-sub{ font-size:11px; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; }
+  .topbar-right{ display:flex; align-items:center; gap:10px; }
+  .live-clock{
+    font-family:var(--font-mono); font-size:14px; color:var(--muted);
+    background:var(--surface); border:1px solid var(--line); border-radius:999px;
+    padding:7px 12px;
+  }
+  .icon-btn{
+    width:38px; height:38px; border-radius:12px; border:1px solid var(--line);
+    background:var(--surface); color:var(--ink); font-size:16px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:transform .15s ease, border-color .15s ease;
+  }
+  .icon-btn:hover{ border-color:var(--accent); }
+  .icon-btn:active{ transform:scale(.94); }
+  .sync-badge{
+    display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--success);
+    background:var(--success-soft); border-radius:999px; padding:7px 11px 7px 9px; letter-spacing:.02em;
+  }
+  .sync-badge:not(.on){ color:var(--muted); background:var(--surface-2); }
+  .sync-dot{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .sync-badge.on .sync-dot{ animation:pulse 1.8s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce){ .sync-badge.on .sync-dot{ animation:none; } }
+  @media (max-width:460px){ .sync-badge .sync-label{ display:none; } .sync-badge{ padding:8px; } }
+
+  /* DEMO BANNER */
+  .demo-banner{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    background:var(--warn-soft); border:1px solid var(--warn); color:var(--ink);
+    border-radius:var(--radius-m); padding:12px 16px; font-size:13px; margin-bottom:16px;
+  }
+  .demo-banner strong{ font-weight:700; }
+  .demo-banner button{
+    background:var(--surface); border:1px solid var(--line); border-radius:999px;
+    padding:7px 14px; font-size:12.5px; font-weight:600; cursor:pointer; color:var(--ink);
+    white-space:nowrap;
+  }
+  .demo-banner button:hover{ border-color:var(--accent); color:var(--accent); }
+
+  /* CHILD STRIP */
+  .child-strip{ display:flex; gap:8px; overflow-x:auto; padding-bottom:16px; -webkit-overflow-scrolling:touch; }
+  .child-chip{
+    display:flex; align-items:center; gap:8px; flex-shrink:0;
+    background:var(--surface); border:1.5px solid var(--line); border-radius:999px;
+    padding:7px 14px 7px 7px; cursor:pointer; font-weight:600; font-size:13.5px; color:var(--muted);
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .child-chip .em{ width:28px; height:28px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .child-chip.active{ border-color:var(--accent); color:var(--ink); background:var(--accent-soft); }
+  .child-chip.add{ color:var(--accent); border-style:dashed; font-size:18px; padding:7px 16px; }
+
+  /* VIEW */
+  .view{ display:flex; flex-direction:column; gap:20px; }
+
+  /* STATUS CARD */
+  .status-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-l);
+    padding:24px; box-shadow:var(--shadow);
+  }
+  .status-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:18px; }
+  .status-badge{
+    display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700;
+    letter-spacing:.05em; text-transform:uppercase; padding:6px 11px; border-radius:999px;
+  }
+  .status-badge.in{ background:var(--success-soft); color:var(--success); }
+  .status-badge.out{ background:var(--surface-2); color:var(--muted); }
+  .status-badge.absent{ background:var(--warn-soft); color:var(--warn); }
+  .status-badge.stale{ background:var(--critical-soft); color:var(--critical); }
+  .status-dot{ width:7px; height:7px; border-radius:50%; background:currentColor; }
+  .status-dot.pulse{ animation:pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+  @media (prefers-reduced-motion: reduce){ .status-dot.pulse{ animation:none; } }
+  .status-date{ font-size:12.5px; color:var(--muted); font-family:var(--font-mono); }
+
+  .status-headline{ font-family:var(--font-display); font-size:30px; font-weight:600; line-height:1.15; margin-bottom:4px; }
+  .status-sub{ font-size:13.5px; color:var(--muted); margin-bottom:20px; }
+  .status-sub .t{ font-family:var(--font-mono); color:var(--ink); font-weight:600; }
+
+  .primary-btn{
+    width:100%; border:none; border-radius:var(--radius-m); padding:18px 20px;
+    background:var(--accent); color:var(--accent-ink); font-size:16.5px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;
+    box-shadow:var(--shadow); transition:transform .12s ease, filter .15s ease;
+  }
+  .primary-btn:hover{ filter:brightness(1.05); }
+  .primary-btn:active{ transform:scale(.985); }
+  .primary-btn.out-mode{ background:var(--ink); color:var(--paper); }
+
+  .field-label{ font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:18px 0 9px; }
+  .chip-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .chip{
+    border:1.5px solid var(--line); background:var(--surface); color:var(--ink);
+    border-radius:999px; padding:8px 14px; font-size:13.5px; font-weight:600; cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .chip:hover{ border-color:var(--accent); }
+  .chip.active{ border-color:var(--accent); background:var(--accent-soft); }
+  .chip.warn.active{ border-color:var(--warn); background:var(--warn-soft); color:var(--warn); }
+
+  .ghost-btn{
+    background:transparent; border:1.5px dashed var(--line); color:var(--muted);
+    border-radius:var(--radius-s); padding:12px 14px; font-size:13.5px; font-weight:600;
+    width:100%; cursor:pointer; text-align:center; margin-top:16px; transition:border-color .15s ease,color .15s ease;
+  }
+  .ghost-btn:hover{ border-color:var(--warn); color:var(--warn); }
+
+  .cancel-row{ margin-top:14px; display:flex; }
+  .link-btn{ background:none; border:none; color:var(--critical); font-size:12.5px; font-weight:700; cursor:pointer; padding:4px 0; }
+
+  /* SECTION HEADER */
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+  .section-title{ font-size:18px; font-weight:600; }
+  .section-hint{ font-size:12px; color:var(--muted); }
+
+  /* TIMELINE */
+  .timeline{ display:flex; flex-direction:column; }
+  .timeline-item{
+    display:flex; gap:14px; padding:12px 0; border-bottom:1px solid var(--line);
+  }
+  .timeline-item:last-child{ border-bottom:none; }
+  .tl-time{ font-family:var(--font-mono); font-size:14px; font-weight:600; width:52px; flex-shrink:0; padding-top:2px; }
+  .tl-body{ flex:1; min-width:0; }
+  .tl-title{ font-size:14px; font-weight:600; }
+  .tl-meta{ font-size:12.5px; color:var(--muted); margin-top:2px; }
+  .tl-actions{ display:flex; gap:6px; flex-shrink:0; }
+  .tl-actions button{
+    width:28px; height:28px; border-radius:8px; border:1px solid var(--line); background:var(--surface);
+    color:var(--muted); cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center;
+  }
+  .tl-actions button:hover{ border-color:var(--accent); color:var(--accent); }
+  .empty-note{ font-size:13.5px; color:var(--muted); padding:18px 0; text-align:center; }
+
+  /* STAT GRID */
+  .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:2px; background:var(--line); border-radius:var(--radius-m); overflow:hidden; border:1px solid var(--line); }
+  .stat-tile{ background:var(--surface); padding:16px 10px; text-align:center; }
+  .stat-value{ font-family:var(--font-display); font-size:24px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .stat-label{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:4px; }
+  @media (max-width:460px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+
+  /* CALENDAR */
+  .cal-card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-l); padding:20px; box-shadow:var(--shadow); }
+  .cal-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .cal-month{ font-family:var(--font-display); font-size:18px; font-weight:600; text-transform:capitalize; }
+  .cal-nav-btns{ display:flex; gap:6px; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .cal-dow{ text-align:center; font-size:10px; color:var(--muted); font-weight:700; text-transform:uppercase; padding-bottom:6px; }
+  .cal-cell{
+    aspect-ratio:1; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:12.5px; font-weight:600; cursor:pointer; border:1.5px solid transparent; gap:2px; position:relative;
+    background:var(--surface-2); color:var(--muted);
+  }
+  .cal-cell:hover{ border-color:var(--accent); }
+  .cal-cell.out-month{ opacity:.35; }
+  .cal-cell.future{ background:transparent; color:var(--line); cursor:default; }
+  .cal-cell.future:hover{ border-color:transparent; }
+  .cal-cell.weekend{ background:transparent; color:var(--muted); opacity:.55; cursor:default; }
+  .cal-cell.weekend:hover{ border-color:transparent; }
+  .cal-cell.present{ background:var(--success-soft); color:var(--success); }
+  .cal-cell.absent{ background:var(--warn-soft); color:var(--warn); }
+  .cal-cell.ongoing{ background:var(--accent-soft); color:var(--accent); }
+  .cal-cell.missing{ background:var(--critical-soft); color:var(--critical); }
+  .cal-cell.selected{ border-color:var(--ink); }
+  .cal-dot{ width:5px; height:5px; border-radius:50%; background:currentColor; }
+  .cal-legend{ display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; }
+  .cal-legend-item{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted); }
+  .cal-legend-dot{ width:9px; height:9px; border-radius:3px; }
+
+  .day-detail{ margin-top:16px; padding-top:16px; border-top:1px solid var(--line); }
+  .day-detail-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .day-detail-title{ font-weight:700; font-size:14.5px; }
+
+  /* LEDGER (CONDICĂ) */
+  .filters{ display:flex; gap:8px; flex-wrap:wrap; }
+  .filters select, .filters input[type="search"]{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-s);
+    padding:10px 12px; font-size:13px; color:var(--ink); font-family:inherit;
+  }
+  .filters input[type="search"]{ flex:1; min-width:140px; }
+  .ledger-group{ margin-bottom:6px; }
+  .ledger-date{
+    font-family:var(--font-mono); font-size:11.5px; color:var(--muted); text-transform:uppercase;
+    letter-spacing:.06em; padding:14px 0 6px; border-bottom:1px solid var(--line); margin-bottom:2px;
+  }
+  .ledger-row{ display:flex; align-items:flex-start; gap:12px; padding:11px 0; border-bottom:1px dashed var(--line); }
+  .ledger-row:last-child{ border-bottom:none; }
+  .ledger-time{ font-family:var(--font-mono); font-size:14px; font-weight:600; width:50px; flex-shrink:0; padding-top:3px; }
+  .badge{ display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:3px 8px; border-radius:6px; }
+  .badge.in{ background:var(--success-soft); color:var(--success); }
+  .badge.out{ background:var(--surface-2); color:var(--muted); }
+  .badge.absent{ background:var(--warn-soft); color:var(--warn); }
+  .ledger-meta{ font-size:12.5px; color:var(--muted); margin-top:4px; }
+  .ledger-note{ font-size:12.5px; color:var(--ink); margin-top:4px; font-style:italic; }
+  .ledger-body{ flex:1; min-width:0; }
+  .ledger-actions{ display:flex; gap:6px; }
+
+  .toolbar-btn{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-s);
+    padding:10px 14px; font-size:13px; font-weight:600; cursor:pointer; color:var(--ink);
+    display:flex; align-items:center; gap:6px;
+  }
+  .toolbar-btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .toolbar-row{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+
+  /* SETTINGS */
+  .settings-card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-l); padding:20px; }
+  .settings-card + .settings-card{ margin-top:14px; }
+  .settings-title{ font-size:15px; font-weight:700; margin-bottom:4px; }
+  .settings-hint{ font-size:12.5px; color:var(--muted); margin-bottom:14px; }
+  .list-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); }
+  .list-row:last-child{ border-bottom:none; }
+  .list-row-name{ display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600; }
+  .row-x{ background:none; border:none; color:var(--muted); font-size:15px; cursor:pointer; width:26px; height:26px; border-radius:8px; }
+  .row-x:hover{ background:var(--critical-soft); color:var(--critical); }
+  .add-row{ display:flex; gap:8px; margin-top:12px; }
+  .add-row input{ flex:1; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-s); padding:9px 12px; font-size:13.5px; color:var(--ink); font-family:inherit; }
+  .add-row button{ background:var(--accent); color:var(--accent-ink); border:none; border-radius:var(--radius-s); padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer; }
+  .seg{ display:flex; background:var(--paper); border:1px solid var(--line); border-radius:999px; padding:3px; gap:2px; }
+  .seg button{ flex:1; background:none; border:none; border-radius:999px; padding:9px 10px; font-size:12.5px; font-weight:700; color:var(--muted); cursor:pointer; }
+  .seg button.active{ background:var(--accent); color:var(--accent-ink); }
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
+  .btn{ border-radius:var(--radius-s); padding:10px 16px; font-size:13px; font-weight:700; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink); }
+  .btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .btn.danger{ border-color:var(--critical); color:var(--critical); }
+  .btn.danger:hover{ background:var(--critical-soft); }
+  .file-label{ display:inline-block; }
+  .file-label input{ display:none; }
+
+  /* TABBAR */
+  .tabbar{
+    position:sticky; bottom:12px; margin-top:22px; display:flex; gap:4px;
+    background:var(--surface); border:1px solid var(--line); border-radius:999px;
+    padding:6px; box-shadow:var(--shadow);
+  }
+  .tab{
+    flex:1; background:none; border:none; border-radius:999px; padding:10px 6px;
+    display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; color:var(--muted);
+  }
+  .tab span{ font-size:10.5px; font-weight:700; letter-spacing:.01em; }
+  .tab.active{ background:var(--accent-soft); color:var(--accent); }
+
+  /* MODAL */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(10,12,18,.5); display:flex; align-items:flex-end; justify-content:center;
+    z-index:50; padding:0;
+  }
+  @media (min-width:600px){ .modal-backdrop{ align-items:center; padding:20px; } }
+  .modal{
+    background:var(--surface); width:100%; max-width:480px; border-radius:20px 20px 0 0;
+    padding:22px; max-height:88vh; overflow-y:auto; box-shadow:var(--shadow);
+  }
+  @media (min-width:600px){ .modal{ border-radius:var(--radius-l); } }
+  .modal h3{ font-size:18px; margin-bottom:16px; }
+  .form-row{ margin-bottom:14px; }
+  .form-row label{ display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:7px; }
+  .form-row input, .form-row select, .form-row textarea{
+    width:100%; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-s);
+    padding:11px 12px; font-size:14px; color:var(--ink); font-family:inherit;
+  }
+  .form-row textarea{ min-height:70px; resize:vertical; }
+  .form-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .modal-actions{ display:flex; gap:10px; margin-top:6px; }
+  .modal-actions .btn{ flex:1; text-align:center; }
+  .modal-actions .btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .modal-close{ position:sticky; top:0; float:right; background:none; border:none; font-size:20px; color:var(--muted); cursor:pointer; }
+
+  /* TOAST */
+  .toast{
+    position:fixed; left:50%; bottom:96px; transform:translate(-50%,12px); opacity:0;
+    background:var(--ink); color:var(--paper); padding:12px 16px; border-radius:999px;
+    font-size:13px; display:flex; align-items:center; gap:12px; box-shadow:var(--shadow);
+    z-index:60; transition:opacity .25s ease, transform .25s ease; pointer-events:none; max-width:90vw;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%,0); pointer-events:auto; }
+  .toast-undo{ background:none; border:none; color:var(--accent); font-weight:800; font-size:13px; cursor:pointer; flex-shrink:0; }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .toast{ color:var(--ink); background:var(--surface); border:1px solid var(--line); } }
+  :root[data-theme="dark"] .toast{ color:var(--ink); background:var(--surface); border:1px solid var(--line); }
+
+  [hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" id="brandMark">🎒</span>
+      <div class="brand-text">
+        <span class="brand-name">Pași Mici</span>
+        <span class="brand-sub">condica digitală de creșă</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="sync-badge" id="syncBadge" hidden><span class="sync-dot"></span><span class="sync-label">Sincronizat</span></span>
+      <time class="live-clock font-numeric" id="liveClock">--:--:--</time>
+      <button class="icon-btn" id="themeToggle" aria-label="Schimbă tema">◐</button>
+    </div>
+  </header>
+
+  <div class="demo-banner" id="demoBanner" hidden>
+    <span>📋 <strong>Date exemplu</strong> — așa arată aplicația în uz zilnic.</span>
+    <button id="clearDemoBtn" type="button">Șterge exemplul, încep curat</button>
+  </div>
+
+  <nav class="child-strip" id="childStrip"></nav>
+
+  <main class="view" id="view-azi"></main>
+  <main class="view" id="view-calendar" hidden></main>
+  <main class="view" id="view-condica" hidden></main>
+  <main class="view" id="view-setari" hidden></main>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab active" data-view="azi" type="button">🏠<span>Azi</span></button>
+    <button class="tab" data-view="calendar" type="button">🗓️<span>Calendar</span></button>
+    <button class="tab" data-view="condica" type="button">📖<span>Condică</span></button>
+    <button class="tab" data-view="setari" type="button">⚙️<span>Setări</span></button>
+  </nav>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- utils ---------- */
+  var DOW = ['Du','Lu','Ma','Mi','Jo','Vi','Sb'];
+  var DOW_FULL = ['Duminică','Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă'];
+  var MONTHS = ['Ianuarie','Februarie','Martie','Aprilie','Mai','Iunie','Iulie','August','Septembrie','Octombrie','Noiembrie','Decembrie'];
+  var EMOJI_CHOICES = ['🦊','🐻','🐰','🦁','🐼','🐨','🐸','🦄','👦','👧'];
+
+  function uid(){ return Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4); }
+  function escapeHtml(s){
+    return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function pad2(n){ return (n<10?'0':'')+n; }
+  function fmtTime(ts){ var d=new Date(ts); return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
+  function fmtMinutes(mins){ if(mins==null) return '—:—'; var h=Math.floor(mins/60), m=Math.round(mins%60); return pad2(h)+':'+pad2(m); }
+  function fmtDateShort(ts){ var d=new Date(ts); return DOW[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()].slice(0,3); }
+  function fmtDateLong(ts){ var d=new Date(ts); return DOW_FULL[d.getDay()]+', '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear(); }
+  function fmtDuration(ms){
+    var mins=Math.max(0,Math.round(ms/60000));
+    var h=Math.floor(mins/60), m=mins%60;
+    if(h<=0) return m+' min';
+    return h+'h '+(m? m+'min':'').trim();
+  }
+  function sameDay(ts1, ts2){
+    var a=new Date(ts1), b=new Date(ts2);
+    return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  }
+  function dateKey(ts){ var d=new Date(ts); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+  function minutesOfDay(ts){ var d=new Date(ts); return d.getHours()*60+d.getMinutes(); }
+  function startOfDay(d){ var n=new Date(d); n.setHours(0,0,0,0); return n; }
+  function toInputDate(ts){ var d=new Date(ts); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+  function toInputTime(ts){ var d=new Date(ts); return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
+  function combineDateTime(dateStr, timeStr){
+    var parts=(dateStr||toInputDate(Date.now())).split('-');
+    var tp=(timeStr||'09:00').split(':');
+    return new Date(+parts[0], +parts[1]-1, +parts[2], +tp[0], +tp[1], 0, 0).getTime();
+  }
+
+  /* ---------- state ---------- */
+  var STORAGE_KEY = 'pasi-mici-state-v1';
+
+  function defaultState(){
+    return {
+      children: [],
+      activeChildId: null,
+      caregivers: ['Mama','Tata','Bunica','Bunicul'],
+      reasons: ['Boală','Vacanță','Sărbătoare legală','Alt motiv'],
+      lastCaregiver: 'Mama',
+      events: [],
+      theme: 'system',
+      isDemo: false
+    };
+  }
+
+  function mkEvent(childId, type, ts, extra){
+    return Object.assign({ id:uid(), childId:childId, type:type, ts:ts, caregiver:'', reason:'', note:'' }, extra||{});
+  }
+  function atTime(d,h,m){ var nd=new Date(d); nd.setHours(h,m,0,0); return nd.getTime(); }
+
+  function seedDemoState(){
+    var s = defaultState();
+    var child = { id: uid(), name:'Mia', emoji:'🦊', group:'Grupa Fluturași' };
+    s.children = [child];
+    s.activeChildId = child.id;
+    s.isDemo = true;
+
+    var today = startOfDay(new Date());
+    var weekdays = [];
+    for(var i=27;i>=0;i--){
+      var d = new Date(today); d.setDate(d.getDate()-i);
+      var wd = d.getDay();
+      if(wd!==0 && wd!==6) weekdays.push(d);
+    }
+    weekdays = weekdays.slice(-10);
+
+    var caregiverPool = ['Mama','Mama','Tata','Mama','Bunica'];
+    var events = [];
+    weekdays.forEach(function(d, idx){
+      var isToday = sameDay(d.getTime(), today.getTime());
+      if(idx===2){
+        events.push(mkEvent(child.id,'absent', atTime(d,9,0), {reason:'Boală', note:'Febră ușoară, rămâne acasă azi.'}));
+        return;
+      }
+      if(idx===6){
+        events.push(mkEvent(child.id,'absent', atTime(d,9,0), {reason:'Vacanță', note:'Zi liberă, plecați la bunici.'}));
+        return;
+      }
+      var caregiver = caregiverPool[idx % caregiverPool.length];
+      var inMin = 7*60+55+Math.floor(Math.random()*35);
+      events.push(mkEvent(child.id,'in', atTime(d, Math.floor(inMin/60), inMin%60), {caregiver:caregiver}));
+      if(!isToday){
+        var outMin = 16*60+40+Math.floor(Math.random()*65);
+        var outCg = Math.random()<0.7 ? caregiver : caregiverPool[(idx+1)%caregiverPool.length];
+        events.push(mkEvent(child.id,'out', atTime(d, Math.floor(outMin/60), outMin%60), {caregiver:outCg}));
+      }
+    });
+    s.events = events;
+    s.lastCaregiver = 'Mama';
+    return s;
+  }
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return null;
+      var s = JSON.parse(raw);
+      if(!s || !Array.isArray(s.children)) return null;
+      return s;
+    }catch(e){ return null; }
+  }
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  var ACTIVE_CHILD_KEY = 'pasi-mici-active-child-v1';
+  function loadActiveChildId(){ try{ return localStorage.getItem(ACTIVE_CHILD_KEY); }catch(e){ return null; } }
+  function saveActiveChildId(id){ try{ if(id) localStorage.setItem(ACTIVE_CHILD_KEY, id); }catch(e){} }
+
+  var state = loadState();
+  if(!state){ state = seedDemoState(); saveState(); }
+  var savedActiveId = loadActiveChildId();
+  if(savedActiveId && state.children.some(function(c){ return c.id===savedActiveId; })) state.activeChildId = savedActiveId;
+  if(!state.activeChildId && state.children.length) state.activeChildId = state.children[0].id;
+
+  /* ---------- shared sync (db capability) ---------- */
+  var claudeApi = (typeof window!=='undefined' && window.claude && typeof window.claude.use==='function') ? window.claude : null;
+  var dbMode = false;
+  var dbApi = null, configRef = null, eventsCol = null;
+
+  function configFromState(s){
+    return { children:s.children, caregivers:s.caregivers, reasons:s.reasons, lastCaregiver:s.lastCaregiver, isDemo:!!s.isDemo };
+  }
+  function setSyncBadge(mode){
+    var el = document.getElementById('syncBadge'); if(!el) return;
+    if(mode==='synced'){ el.hidden=false; el.className='sync-badge on'; el.innerHTML='<span class="sync-dot"></span><span class="sync-label">Sincronizat</span>'; el.title='Datele se sincronizează live cu oricine altcineva are acest link deschis.'; }
+    else if(mode==='connecting'){ el.hidden=false; el.className='sync-badge'; el.innerHTML='<span class="sync-dot"></span><span class="sync-label">Se conectează…</span>'; el.title='Se conectează la sincronizare.'; }
+    else { el.hidden = true; }
+  }
+  function showDbErrorToast(err){
+    var msg = (err && err.code==='resource_exhausted') ? 'Prea multe modificări deodată, încearcă din nou în câteva secunde.' : 'Nu am putut salva pe server, încearcă din nou.';
+    showToast('⚠️ '+msg);
+  }
+  function eventDocData(ev){
+    return { childId:ev.childId, type:ev.type, ts:ev.ts, caregiver:ev.caregiver||'', reason:ev.reason||'', note:ev.note||'' };
+  }
+
+  function persistNewEvent(ev){
+    if(dbMode){ eventsCol.doc(ev.id).set(eventDocData(ev)).catch(showDbErrorToast); }
+    else { state.events.push(ev); saveState(); renderAll(); }
+  }
+  function persistUpdateEvent(id, fields){
+    if(dbMode){ eventsCol.doc(id).update(fields).catch(showDbErrorToast); }
+    else {
+      var ev = state.events.filter(function(e){ return e.id===id; })[0];
+      if(ev){ Object.assign(ev, fields); saveState(); renderAll(); }
+    }
+  }
+  function persistDeleteEvent(id){
+    if(dbMode){ eventsCol.doc(id).delete().catch(showDbErrorToast); }
+    else { state.events = state.events.filter(function(e){ return e.id!==id; }); saveState(); renderAll(); }
+  }
+  function persistConfig(fields){
+    Object.assign(state, fields);
+    if(dbMode){ configRef.update(fields).catch(showDbErrorToast); renderAll(); }
+    else { saveState(); renderAll(); }
+  }
+  function persistConfigReplace(fullState){
+    state = fullState;
+    if(dbMode){ configRef.set(configFromState(fullState)).catch(showDbErrorToast); renderAll(); }
+    else { saveState(); renderAll(); }
+  }
+  function wipeAllEventsDb(then){
+    eventsCol.get().then(function(qsnap){
+      var dels = qsnap.docs.map(function(d){ return eventsCol.doc(d.id).delete().catch(function(){}); });
+      Promise.all(dels).then(then, then);
+    }).catch(then);
+  }
+  function seedEventsIntoDb(events){
+    events.forEach(function(ev){ eventsCol.doc(ev.id).set(eventDocData(ev)).catch(function(){}); });
+  }
+
+  var unsubConfig=null, unsubEvents=null;
+  function subscribeDb(){
+    dbMode = true;
+    setSyncBadge('synced');
+    unsubConfig = configRef.onSnapshot(function(snap){
+      var data = snap.data() || {};
+      state.children = data.children || [];
+      state.caregivers = (data.caregivers && data.caregivers.length) ? data.caregivers : ['Mama','Tata','Bunica','Bunicul'];
+      state.reasons = (data.reasons && data.reasons.length) ? data.reasons : ['Boală','Vacanță','Sărbătoare legală','Alt motiv'];
+      state.lastCaregiver = data.lastCaregiver || state.caregivers[0] || '';
+      state.isDemo = !!data.isDemo;
+      if(!state.activeChildId || !state.children.some(function(c){ return c.id===state.activeChildId; })){
+        state.activeChildId = state.children.length ? state.children[0].id : null;
+      }
+      renderAll();
+    }, function(){ dbMode=false; setSyncBadge('off'); renderAll(); });
+
+    unsubEvents = eventsCol.orderBy('ts','desc').limit(1000).onSnapshot(function(qsnap){
+      state.events = qsnap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
+      renderAll();
+    }, function(){ /* keep last known events on transient errors */ });
+  }
+
+  function initDbMode(){
+    setSyncBadge('connecting');
+    configRef.get().then(function(snap){
+      if(!snap.exists){
+        var seed = seedDemoState();
+        configRef.set(configFromState(seed)).catch(function(){});
+        seedEventsIntoDb(seed.events);
+      }
+      subscribeDb();
+    }).catch(function(){ dbMode=false; setSyncBadge('off'); });
+  }
+
+  if(claudeApi){
+    claudeApi.use('db').then(function(db){
+      if(!db) return;
+      dbApi = db;
+      configRef = db.doc('config/main');
+      eventsCol = db.collection('events');
+      initDbMode();
+    }).catch(function(){});
+  }
+
+  /* ---------- derived ---------- */
+  function activeChild(){
+    return state.children.filter(function(c){ return c.id===state.activeChildId; })[0] || state.children[0] || null;
+  }
+  function eventsFor(childId){
+    return state.events.filter(function(e){ return e.childId===childId; }).sort(function(a,b){ return a.ts-b.ts; });
+  }
+  function lastEventFor(childId){
+    var evs = eventsFor(childId);
+    return evs.length ? evs[evs.length-1] : null;
+  }
+  function todaysEvents(childId){
+    var now = Date.now();
+    return eventsFor(childId).filter(function(e){ return sameDay(e.ts, now); });
+  }
+  function statusFor(childId){
+    var todays = todaysEvents(childId);
+    var absentToday = todays.filter(function(e){ return e.type==='absent'; })[0];
+    if(absentToday) return { kind:'absent', ev:absentToday };
+    var last = lastEventFor(childId);
+    if(last && last.type==='in'){
+      var stale = !sameDay(last.ts, Date.now());
+      return { kind:'in', since:last.ts, stale:stale };
+    }
+    return { kind:'out', last:last };
+  }
+
+  function dayStatus(childId, d){
+    var today0 = startOfDay(new Date());
+    var d0 = startOfDay(d);
+    if(d0.getTime() > today0.getTime()) return { kind:'future' };
+    var wd = d0.getDay();
+    var dayEvs = eventsFor(childId).filter(function(e){ return sameDay(e.ts, d0.getTime()); });
+    var absentEv = dayEvs.filter(function(e){ return e.type==='absent'; })[0];
+    if(absentEv) return { kind:'absent', reason:absentEv.reason };
+    var inEv = dayEvs.filter(function(e){ return e.type==='in'; })[0];
+    var outEvs = dayEvs.filter(function(e){ return e.type==='out'; });
+    var outEv = outEvs.length ? outEvs[outEvs.length-1] : null;
+    if(inEv && outEv) return { kind:'present', inTs:inEv.ts, outTs:outEv.ts };
+    if(inEv && !outEv){
+      if(sameDay(d0.getTime(), today0.getTime())) return { kind:'ongoing', inTs:inEv.ts };
+      return { kind:'missing', inTs:inEv.ts };
+    }
+    if(wd===0 || wd===6) return { kind:'weekend' };
+    return { kind:'empty' };
+  }
+
+  function computeStreak(childId){
+    var streak = 0;
+    var d = startOfDay(new Date());
+    for(var guard=0; guard<400; guard++){
+      var wd = d.getDay();
+      if(wd===0 || wd===6){ d.setDate(d.getDate()-1); continue; }
+      var st = dayStatus(childId, d);
+      if(st.kind==='present' || st.kind==='ongoing'){ streak++; d.setDate(d.getDate()-1); continue; }
+      if(st.kind==='empty' && sameDay(d.getTime(), Date.now())){ d.setDate(d.getDate()-1); continue; }
+      break;
+    }
+    return streak;
+  }
+
+  function monthStats(childId, year, month){
+    var evs = eventsFor(childId).filter(function(e){
+      var d = new Date(e.ts); return d.getFullYear()===year && d.getMonth()===month;
+    });
+    var daysPresent = {}; var daysAbsent = {};
+    evs.forEach(function(e){
+      if(e.type==='in') daysPresent[dateKey(e.ts)] = true;
+      if(e.type==='absent') daysAbsent[dateKey(e.ts)] = true;
+    });
+    var inTimes = evs.filter(function(e){ return e.type==='in'; }).map(function(e){ return minutesOfDay(e.ts); });
+    var outTimes = evs.filter(function(e){ return e.type==='out'; }).map(function(e){ return minutesOfDay(e.ts); });
+    var avgIn = inTimes.length ? Math.round(inTimes.reduce(function(a,b){return a+b;},0)/inTimes.length) : null;
+    var avgOut = outTimes.length ? Math.round(outTimes.reduce(function(a,b){return a+b;},0)/outTimes.length) : null;
+    return { daysPresent:Object.keys(daysPresent).length, daysAbsent:Object.keys(daysAbsent).length, avgIn:avgIn, avgOut:avgOut };
+  }
+
+  function weekHours(childId){
+    var now = new Date();
+    var offset = (now.getDay()+6)%7;
+    var monday = startOfDay(now); monday.setDate(monday.getDate()-offset);
+    var total = 0;
+    for(var i=0;i<7;i++){
+      var d = new Date(monday); d.setDate(monday.getDate()+i);
+      var evs = eventsFor(childId).filter(function(e){ return sameDay(e.ts, d.getTime()); });
+      var inEv = evs.filter(function(e){ return e.type==='in'; })[0];
+      var outEvs = evs.filter(function(e){ return e.type==='out'; });
+      var outEv = outEvs.length ? outEvs[outEvs.length-1] : null;
+      if(inEv && outEv && outEv.ts>inEv.ts) total += (outEv.ts-inEv.ts)/3600000;
+    }
+    return total;
+  }
+
+  /* ---------- actions ---------- */
+  function setActiveChild(id){ state.activeChildId=id; saveActiveChildId(id); renderAll(); }
+
+  function logCheck(type){
+    var child = activeChild(); if(!child) return;
+    var ev = mkEvent(child.id, type, Date.now(), { caregiver: state.lastCaregiver });
+    persistNewEvent(ev);
+    showToast((type==='in'?'Sosire înregistrată':'Plecare înregistrată')+' — '+fmtTime(ev.ts)+' · '+(ev.caregiver||'—'), ev.id);
+  }
+  function logAbsence(reason){
+    var child = activeChild(); if(!child) return;
+    var ev = mkEvent(child.id, 'absent', Date.now(), { reason: reason });
+    persistNewEvent(ev);
+    showToast('Absență înregistrată — '+reason, ev.id);
+  }
+  function undoEvent(id){ persistDeleteEvent(id); hideToast(); }
+  function deleteEvent(id){ persistDeleteEvent(id); }
+  function updateEvent(id, fields){ persistUpdateEvent(id, fields); }
+  function addManualEvent(fields){
+    var child = activeChild(); if(!child) return;
+    var ev = mkEvent(child.id, fields.type, fields.ts, { caregiver:fields.caregiver||'', reason:fields.reason||'', note:fields.note||'' });
+    persistNewEvent(ev);
+  }
+  function setLastCaregiver(name){ persistConfig({ lastCaregiver:name }); }
+
+  function addChild(name, emoji, group){
+    var c = { id:uid(), name:name, emoji:emoji, group:group||'' };
+    var newChildren = state.children.concat([c]);
+    state.activeChildId = c.id; saveActiveChildId(c.id);
+    persistConfig({ children:newChildren, isDemo:false });
+  }
+  function removeChild(id){
+    var newChildren = state.children.filter(function(c){ return c.id!==id; });
+    var removedEvents = state.events.filter(function(e){ return e.childId===id; });
+    if(state.activeChildId===id){
+      state.activeChildId = newChildren.length ? newChildren[0].id : null;
+      saveActiveChildId(state.activeChildId);
+    }
+    if(dbMode) removedEvents.forEach(function(e){ eventsCol.doc(e.id).delete().catch(function(){}); });
+    else state.events = state.events.filter(function(e){ return e.childId!==id; });
+    persistConfig({ children:newChildren });
+  }
+  function addCaregiver(name){ if(!name || state.caregivers.indexOf(name)>-1) return; persistConfig({ caregivers: state.caregivers.concat([name]) }); }
+  function removeCaregiver(name){ persistConfig({ caregivers: state.caregivers.filter(function(c){ return c!==name; }) }); }
+  function addReason(name){ if(!name || state.reasons.indexOf(name)>-1) return; persistConfig({ reasons: state.reasons.concat([name]) }); }
+  function removeReason(name){ persistConfig({ reasons: state.reasons.filter(function(r){ return r!==name; }) }); }
+
+  function setTheme(t){
+    state.theme = t; saveState();
+    document.documentElement.setAttribute('data-theme', t==='system' ? '' : t);
+    if(t==='system') document.documentElement.removeAttribute('data-theme');
+    renderSetari();
+  }
+
+  function clearDemoAndStart(){
+    var fresh = defaultState();
+    fresh.theme = state.theme;
+    fresh.isDemo = false;
+    if(dbMode){ wipeAllEventsDb(function(){ persistConfigReplace(fresh); openAddChildModal(); }); }
+    else { persistConfigReplace(fresh); openAddChildModal(); }
+  }
+  function resetAll(){
+    localStorage.removeItem(STORAGE_KEY);
+    var seed = seedDemoState();
+    seed.theme = state.theme;
+    if(dbMode){ wipeAllEventsDb(function(){ persistConfigReplace(seed); seedEventsIntoDb(seed.events); }); }
+    else { persistConfigReplace(seed); }
+  }
+
+  function exportJSON(){
+    var blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'pasi-mici-backup-'+toInputDate(Date.now())+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+  function importJSONFile(file){
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var s = JSON.parse(String(reader.result));
+        if(!s || !Array.isArray(s.children) || !Array.isArray(s.events)) throw new Error('format invalid');
+        s.theme = state.theme;
+        if(dbMode){ wipeAllEventsDb(function(){ persistConfigReplace(s); seedEventsIntoDb(s.events); showToast('Backup importat și sincronizat.'); }); }
+        else { persistConfigReplace(s); showToast('Backup importat cu succes.'); }
+      }catch(e){ alert('Fișierul nu pare a fi un backup valid Pași Mici.'); }
+    };
+    reader.readAsText(file);
+  }
+  function exportCSV(){
+    var rows = [['Data','Ora','Copil','Tip','Persoană / Motiv','Notă']];
+    state.events.slice().sort(function(a,b){return a.ts-b.ts;}).forEach(function(e){
+      var child = state.children.filter(function(c){return c.id===e.childId;})[0];
+      var type = e.type==='in'?'Sosire':e.type==='out'?'Plecare':'Absență';
+      rows.push([toInputDate(e.ts), fmtTime(e.ts), child?child.name:'', type, e.type==='absent'?e.reason:e.caregiver, e.note||'']);
+    });
+    var csv = rows.map(function(r){
+      return r.map(function(v){ v=String(v==null?'':v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }).join(',');
+    }).join('\r\n');
+    var blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href=url; a.download='pasi-mici-condica-'+toInputDate(Date.now())+'.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- toast ---------- */
+  var toastTimer=null;
+  function showToast(msg, undoId){
+    var el = document.getElementById('toast');
+    el.innerHTML = '<span>'+escapeHtml(msg)+'</span>' + (undoId ? '<button class="toast-undo" data-undo="'+undoId+'" type="button">Anulează</button>' : '');
+    el.hidden = false;
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 5000);
+  }
+  function hideToast(){
+    var el = document.getElementById('toast');
+    el.classList.remove('show');
+    setTimeout(function(){ el.hidden=true; }, 250);
+  }
+  document.getElementById('toast').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-undo]');
+    if(btn) undoEvent(btn.getAttribute('data-undo'));
+  });
+
+  /* ---------- modal ---------- */
+  function openModal(html){
+    document.getElementById('modal').innerHTML = html;
+    document.getElementById('modalBackdrop').hidden = false;
+  }
+  function closeModal(){ document.getElementById('modalBackdrop').hidden = true; document.getElementById('modal').innerHTML=''; }
+  document.getElementById('modalBackdrop').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+  function openAddChildModal(){
+    var emojiHtml = EMOJI_CHOICES.map(function(em,i){ return '<button type="button" class="chip emoji-pick'+(i===0?' active':'')+'" data-emoji="'+em+'">'+em+'</button>'; }).join('');
+    openModal(
+      '<button class="modal-close" type="button" onclick="PasiMici.closeModal()">✕</button>'+
+      '<h3>Copil nou</h3>'+
+      '<div class="form-row"><label>Nume</label><input type="text" id="newChildName" placeholder="ex: Andrei" autofocus></div>'+
+      '<div class="form-row"><label>Grupă (opțional)</label><input type="text" id="newChildGroup" placeholder="ex: Grupa Curcubeu"></div>'+
+      '<div class="form-row"><label>Avatar</label><div class="chip-row" id="emojiPicker">'+emojiHtml+'</div></div>'+
+      '<div class="modal-actions"><button class="btn primary" type="button" id="saveChildBtn">Adaugă copilul</button></div>'
+    );
+    var chosen = EMOJI_CHOICES[0];
+    document.getElementById('emojiPicker').addEventListener('click', function(e){
+      var b = e.target.closest('.emoji-pick'); if(!b) return;
+      chosen = b.getAttribute('data-emoji');
+      this.querySelectorAll('.emoji-pick').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+    });
+    document.getElementById('saveChildBtn').addEventListener('click', function(){
+      var name = document.getElementById('newChildName').value.trim();
+      if(!name){ document.getElementById('newChildName').focus(); return; }
+      var group = document.getElementById('newChildGroup').value.trim();
+      addChild(name, chosen, group);
+      closeModal();
+    });
+  }
+
+  function eventModalHtml(ev, presetDate){
+    var isEdit = !!ev;
+    var type = ev ? ev.type : 'in';
+    var d = ev ? ev.ts : (presetDate ? combineDateTime(presetDate, '09:00') : Date.now());
+    var caregiverOpts = state.caregivers.map(function(c){ return '<option value="'+escapeHtml(c)+'"'+((ev&&ev.caregiver===c)?' selected':'')+'>'+escapeHtml(c)+'</option>'; }).join('');
+    var reasonOpts = state.reasons.map(function(r){ return '<option value="'+escapeHtml(r)+'"'+((ev&&ev.reason===r)?' selected':'')+'>'+escapeHtml(r)+'</option>'; }).join('');
+    return (
+      '<button class="modal-close" type="button" onclick="PasiMici.closeModal()">✕</button>'+
+      '<h3>'+(isEdit?'Editează înregistrarea':'Adaugă înregistrare')+'</h3>'+
+      '<form id="eventForm">'+
+      '<div class="form-row"><label>Tip</label><select id="evType">'+
+        '<option value="in"'+(type==='in'?' selected':'')+'>Sosire</option>'+
+        '<option value="out"'+(type==='out'?' selected':'')+'>Plecare</option>'+
+        '<option value="absent"'+(type==='absent'?' selected':'')+'>Absență</option>'+
+      '</select></div>'+
+      '<div class="form-grid2">'+
+        '<div class="form-row"><label>Data</label><input type="date" id="evDate" value="'+toInputDate(d)+'"></div>'+
+        '<div class="form-row"><label>Ora</label><input type="time" id="evTime" value="'+toInputTime(d)+'"></div>'+
+      '</div>'+
+      '<div class="form-row" id="evCaregiverRow"><label>Cine a dus / luat copilul</label><select id="evCaregiver">'+caregiverOpts+'</select></div>'+
+      '<div class="form-row" id="evReasonRow"><label>Motiv absență</label><select id="evReason">'+reasonOpts+'</select></div>'+
+      '<div class="form-row"><label>Notă (opțional)</label><textarea id="evNote" placeholder="ex: a luat prânzul, dispoziție bună...">'+escapeHtml(ev?ev.note:'')+'</textarea></div>'+
+      '<div class="modal-actions">'+
+        (isEdit?'<button class="btn danger" type="button" id="deleteEventBtn">Șterge</button>':'')+
+        '<button class="btn primary" type="submit">'+(isEdit?'Salvează':'Adaugă')+'</button>'+
+      '</div>'+
+      '</form>'
+    );
+  }
+  function toggleEventFormRows(){
+    var t = document.getElementById('evType').value;
+    document.getElementById('evCaregiverRow').hidden = (t==='absent');
+    document.getElementById('evReasonRow').hidden = (t!=='absent');
+  }
+  function openEventModal(ev, presetDate){
+    openModal(eventModalHtml(ev, presetDate));
+    toggleEventFormRows();
+    document.getElementById('evType').addEventListener('change', toggleEventFormRows);
+    if(ev){
+      document.getElementById('deleteEventBtn').addEventListener('click', function(){
+        deleteEvent(ev.id); closeModal();
+      });
+    }
+    document.getElementById('eventForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var type = document.getElementById('evType').value;
+      var ts = combineDateTime(document.getElementById('evDate').value, document.getElementById('evTime').value);
+      var fields = { type:type, ts:ts,
+        caregiver: type!=='absent' ? document.getElementById('evCaregiver').value : '',
+        reason: type==='absent' ? document.getElementById('evReason').value : '',
+        note: document.getElementById('evNote').value.trim() };
+      if(ev) updateEvent(ev.id, fields); else addManualEvent(fields);
+      closeModal();
+    });
+  }
+
+  /* ---------- render: shell ---------- */
+  var currentView = 'azi';
+  function switchView(name){
+    currentView = name;
+    ['azi','calendar','condica','setari'].forEach(function(v){
+      document.getElementById('view-'+v).hidden = (v!==name);
+    });
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.getAttribute('data-view')===name); });
+    if(name==='azi') renderAzi();
+    if(name==='calendar') renderCalendar();
+    if(name==='condica') renderCondica();
+    if(name==='setari') renderSetari();
+  }
+  document.getElementById('tabbar').addEventListener('click', function(e){
+    var b = e.target.closest('.tab'); if(!b) return;
+    switchView(b.getAttribute('data-view'));
+  });
+
+  function renderChildStrip(){
+    var wrap = document.getElementById('childStrip');
+    var html = state.children.map(function(c){
+      return '<button type="button" class="child-chip'+(c.id===state.activeChildId?' active':'')+'" data-child="'+c.id+'">'+
+        '<span class="em">'+c.emoji+'</span>'+escapeHtml(c.name)+'</button>';
+    }).join('') + '<button type="button" class="child-chip add" id="addChildChip" title="Adaugă copil">+</button>';
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('[data-child]').forEach(function(el){
+      el.addEventListener('click', function(){ setActiveChild(el.getAttribute('data-child')); });
+    });
+    document.getElementById('addChildChip').addEventListener('click', openAddChildModal);
+    document.getElementById('brandMark').textContent = (activeChild() && activeChild().emoji) || '🎒';
+  }
+
+  /* ---------- render: azi ---------- */
+  function renderAzi(){
+    var root = document.getElementById('view-azi');
+    var child = activeChild();
+    if(!child){
+      root.innerHTML = '<div class="status-card"><p class="empty-note">Adaugă mai întâi un copil din bara de sus, apoi poți începe să înregistrezi sosirile și plecările. 🎒</p></div>';
+      return;
+    }
+    var st = statusFor(child.id);
+    var badgeHtml, headline, sub, btnLabel, btnClass, btnIcon;
+    if(st.kind==='absent'){
+      badgeHtml = '<span class="status-badge absent"><span class="status-dot"></span>Absent azi</span>';
+      headline = escapeHtml(child.name)+' nu merge azi la creșă';
+      sub = 'Motiv: <span class="t">'+escapeHtml(st.ev.reason)+'</span>';
+      btnLabel = null;
+    } else if(st.kind==='in'){
+      badgeHtml = st.stale
+        ? '<span class="status-badge stale"><span class="status-dot"></span>Plecare neînregistrată</span>'
+        : '<span class="status-badge in"><span class="status-dot pulse"></span>La creșă</span>';
+      headline = escapeHtml(child.name)+' este la creșă';
+      sub = st.stale
+        ? 'Ultima sosire pe <span class="t">'+fmtDateShort(st.since)+', '+fmtTime(st.since)+'</span> — nu am plecarea. Verifică în Condică.'
+        : 'De la <span class="t">'+fmtTime(st.since)+'</span> · <span class="t">'+fmtDuration(Date.now()-st.since)+'</span>';
+      btnLabel = 'Am plecat de la creșă'; btnClass='out-mode'; btnIcon='🏠';
+    } else {
+      badgeHtml = '<span class="status-badge out"><span class="status-dot"></span>Acasă</span>';
+      headline = escapeHtml(child.name)+' este acasă';
+      sub = st.last ? 'Ultima plecare: <span class="t">'+fmtDateShort(st.last.ts)+', '+fmtTime(st.last.ts)+'</span>' : 'Nicio înregistrare încă.';
+      btnLabel = 'Am ajuns la creșă'; btnClass=''; btnIcon='🎒';
+    }
+
+    var caregiverChips = state.caregivers.map(function(c){
+      return '<button type="button" class="chip'+(state.lastCaregiver===c?' active':'')+'" data-cg="'+escapeHtml(c)+'">'+escapeHtml(c)+'</button>';
+    }).join('');
+    var reasonChips = state.reasons.map(function(r){
+      return '<button type="button" class="chip warn" data-reason="'+escapeHtml(r)+'">'+escapeHtml(r)+'</button>';
+    }).join('');
+
+    var actionBlock = '';
+    if(st.kind!=='absent'){
+      actionBlock =
+        '<button type="button" class="primary-btn '+btnClass+'" id="mainActionBtn">'+btnIcon+' '+btnLabel+'</button>'+
+        '<div class="field-label">Cu cine</div>'+
+        '<div class="chip-row" id="caregiverChips">'+caregiverChips+'</div>'+
+        '<button type="button" class="ghost-btn" id="toggleAbsenceBtn">📋 Marchează absență azi</button>'+
+        '<div class="chip-row" id="reasonChips" hidden style="margin-top:10px;">'+reasonChips+'</div>';
+    } else {
+      actionBlock = '<div class="cancel-row"><button type="button" class="link-btn" id="cancelAbsenceBtn">Anulează absența</button></div>';
+    }
+
+    var todays = todaysEvents(child.id).slice().sort(function(a,b){return a.ts-b.ts;});
+    var tlHtml = todays.length ? todays.map(timelineRowHtml).join('') : '<p class="empty-note">Încă nimic înregistrat azi.</p>';
+
+    root.innerHTML =
+      '<div class="status-card">'+
+        '<div class="status-top">'+badgeHtml+'<span class="status-date font-numeric">'+fmtDateLong(Date.now())+'</span></div>'+
+        '<h2 class="status-headline">'+headline+'</h2>'+
+        '<p class="status-sub">'+sub+'</p>'+
+        actionBlock+
+      '</div>'+
+      '<div>'+
+        '<div class="section-head"><span class="section-title">Jurnalul zilei</span><span class="section-hint">'+todays.length+' înregistrări</span></div>'+
+        '<div class="timeline" id="todayTimeline" style="margin-top:8px;">'+tlHtml+'</div>'+
+      '</div>';
+
+    var mainBtn = document.getElementById('mainActionBtn');
+    if(mainBtn) mainBtn.addEventListener('click', function(){ logCheck(st.kind==='in' ? 'out' : 'in'); });
+    var cgWrap = document.getElementById('caregiverChips');
+    if(cgWrap) cgWrap.addEventListener('click', function(e){
+      var b=e.target.closest('[data-cg]'); if(!b) return; setLastCaregiver(b.getAttribute('data-cg'));
+    });
+    var toggleAbsBtn = document.getElementById('toggleAbsenceBtn');
+    if(toggleAbsBtn) toggleAbsBtn.addEventListener('click', function(){
+      var rc = document.getElementById('reasonChips'); rc.hidden = !rc.hidden;
+    });
+    var reasonWrap = document.getElementById('reasonChips');
+    if(reasonWrap) reasonWrap.addEventListener('click', function(e){
+      var b=e.target.closest('[data-reason]'); if(!b) return; logAbsence(b.getAttribute('data-reason'));
+    });
+    var cancelAbs = document.getElementById('cancelAbsenceBtn');
+    if(cancelAbs) cancelAbs.addEventListener('click', function(){ deleteEvent(st.ev.id); });
+
+    bindTimelineActions(document.getElementById('todayTimeline'));
+  }
+
+  function timelineRowHtml(e){
+    var title = e.type==='in' ? 'Sosire la creșă' : e.type==='out' ? 'Plecare de la creșă' : 'Absență — '+escapeHtml(e.reason);
+    var meta = e.type==='absent' ? (e.note?escapeHtml(e.note):'') : ('cu '+escapeHtml(e.caregiver||'—')+(e.note?' · '+escapeHtml(e.note):''));
+    return '<div class="timeline-item">'+
+      '<div class="tl-time font-numeric">'+fmtTime(e.ts)+'</div>'+
+      '<div class="tl-body"><div class="tl-title">'+title+'</div>'+(meta?'<div class="tl-meta">'+meta+'</div>':'')+'</div>'+
+      '<div class="tl-actions"><button type="button" data-edit="'+e.id+'" title="Editează">✎</button><button type="button" data-del="'+e.id+'" title="Șterge">🗑</button></div>'+
+    '</div>';
+  }
+  function bindTimelineActions(container){
+    if(!container) return;
+    container.addEventListener('click', function(e){
+      var ed = e.target.closest('[data-edit]');
+      var del = e.target.closest('[data-del]');
+      if(ed){ var ev = state.events.filter(function(x){return x.id===ed.getAttribute('data-edit');})[0]; if(ev) openEventModal(ev); }
+      if(del){ if(confirm('Ștergi această înregistrare?')) deleteEvent(del.getAttribute('data-del')); }
+    });
+  }
+
+  /* ---------- render: calendar ---------- */
+  var calView = (function(){ var n=new Date(); return { year:n.getFullYear(), month:n.getMonth() }; })();
+  var selectedDay = null;
+
+  var CAL_LEGEND = [
+    {cls:'present', label:'Prezent'},
+    {cls:'ongoing', label:'În desfășurare'},
+    {cls:'absent', label:'Absență'},
+    {cls:'missing', label:'Plecare neînregistrată'}
+  ];
+
+  function buildMonthGrid(year, month){
+    var first = new Date(year, month, 1);
+    var offset = (first.getDay()+6)%7;
+    var gridStart = new Date(year, month, 1-offset);
+    var cells = [];
+    for(var i=0;i<42;i++){ var d=new Date(gridStart); d.setDate(gridStart.getDate()+i); cells.push(d); }
+    return cells;
+  }
+
+  function renderCalendar(){
+    var root = document.getElementById('view-calendar');
+    var child = activeChild();
+    if(!child){ root.innerHTML = '<p class="empty-note">Adaugă un copil pentru a vedea calendarul.</p>'; return; }
+
+    var stats = monthStats(child.id, calView.year, calView.month);
+    var streak = computeStreak(child.id);
+    var wHours = weekHours(child.id);
+
+    var statHtml =
+      '<div class="stat-grid">'+
+        '<div class="stat-tile"><div class="stat-value font-numeric">'+streak+'</div><div class="stat-label">Zile la rând</div></div>'+
+        '<div class="stat-tile"><div class="stat-value font-numeric">'+stats.daysPresent+'</div><div class="stat-label">Zile luna asta</div></div>'+
+        '<div class="stat-tile"><div class="stat-value font-numeric">'+fmtMinutes(stats.avgIn)+'</div><div class="stat-label">Sosire medie</div></div>'+
+        '<div class="stat-tile"><div class="stat-value font-numeric">'+wHours.toFixed(1)+'h</div><div class="stat-label">Ore săpt. asta</div></div>'+
+      '</div>';
+
+    var cells = buildMonthGrid(calView.year, calView.month);
+    var dowHtml = DOW.slice(1).concat(DOW[0]).map(function(d){ return '<div class="cal-dow">'+d+'</div>'; }).join('');
+    var cellsHtml = cells.map(function(d){
+      var inMonth = d.getMonth()===calView.month;
+      var st = dayStatus(child.id, d);
+      var cls = ['cal-cell'];
+      if(!inMonth) cls.push('out-month');
+      if(st.kind==='future') cls.push('future');
+      if(st.kind==='weekend') cls.push('weekend');
+      if(st.kind==='present') cls.push('present');
+      if(st.kind==='absent') cls.push('absent');
+      if(st.kind==='ongoing') cls.push('ongoing');
+      if(st.kind==='missing') cls.push('missing');
+      if(selectedDay===dateKey(d.getTime())) cls.push('selected');
+      var dot = (st.kind==='present'||st.kind==='absent'||st.kind==='ongoing'||st.kind==='missing') ? '<span class="cal-dot"></span>' : '';
+      return '<div class="'+cls.join(' ')+'" data-date="'+dateKey(d.getTime())+'">'+d.getDate()+dot+'</div>';
+    }).join('');
+
+    var legendHtml = CAL_LEGEND.map(function(l){
+      return '<div class="cal-legend-item"><span class="cal-legend-dot" style="background:var(--'+({present:'success',ongoing:'accent',absent:'warn',missing:'critical'}[l.cls])+')"></span>'+l.label+'</div>';
+    }).join('');
+
+    root.innerHTML =
+      statHtml+
+      '<div class="cal-card">'+
+        '<div class="cal-nav">'+
+          '<span class="cal-month">'+MONTHS[calView.month]+' '+calView.year+'</span>'+
+          '<div class="cal-nav-btns"><button class="icon-btn" id="calPrev" type="button">←</button><button class="icon-btn" id="calNext" type="button">→</button></div>'+
+        '</div>'+
+        '<div class="cal-grid">'+dowHtml+cellsHtml+'</div>'+
+        '<div class="cal-legend">'+legendHtml+'</div>'+
+        '<div class="day-detail" id="dayDetail" hidden></div>'+
+      '</div>';
+
+    document.getElementById('calPrev').addEventListener('click', function(){
+      calView.month--; if(calView.month<0){ calView.month=11; calView.year--; } renderCalendar();
+    });
+    document.getElementById('calNext').addEventListener('click', function(){
+      calView.month++; if(calView.month>11){ calView.month=0; calView.year++; } renderCalendar();
+    });
+    root.querySelectorAll('.cal-cell[data-date]').forEach(function(el){
+      el.addEventListener('click', function(){
+        var key = el.getAttribute('data-date');
+        selectedDay = (selectedDay===key) ? null : key;
+        renderCalendar();
+      });
+    });
+    if(selectedDay) renderDayDetail(child.id, selectedDay);
+  }
+
+  function renderDayDetail(childId, key){
+    var wrap = document.getElementById('dayDetail');
+    if(!wrap) return;
+    var parts = key.split('-'); var ts = new Date(+parts[0], +parts[1]-1, +parts[2]).getTime();
+    var evs = eventsFor(childId).filter(function(e){ return sameDay(e.ts, ts); }).sort(function(a,b){return a.ts-b.ts;});
+    var rows = evs.length ? evs.map(timelineRowHtml).join('') : '<p class="empty-note">Nicio înregistrare în această zi.</p>';
+    wrap.hidden = false;
+    wrap.innerHTML =
+      '<div class="day-detail-head"><span class="day-detail-title">'+fmtDateLong(ts)+'</span>'+
+      '<button class="toolbar-btn" type="button" id="addForDayBtn">+ Adaugă</button></div>'+
+      '<div class="timeline">'+rows+'</div>';
+    bindTimelineActions(wrap);
+    document.getElementById('addForDayBtn').addEventListener('click', function(){ openEventModal(null, key); });
+  }
+
+  /* ---------- render: condica ---------- */
+  var condicaRange = '30';
+  var condicaSearch = '';
+
+  function renderCondica(){
+    var root = document.getElementById('view-condica');
+    var child = activeChild();
+    if(!child){ root.innerHTML = '<p class="empty-note">Adaugă un copil pentru a vedea condica.</p>'; return; }
+
+    var now = Date.now();
+    var evs = eventsFor(child.id).slice().reverse();
+    if(condicaRange==='30'){
+      var cutoff = now - 30*86400000;
+      evs = evs.filter(function(e){ return e.ts>=cutoff; });
+    } else if(condicaRange==='month'){
+      var n=new Date();
+      evs = evs.filter(function(e){ var d=new Date(e.ts); return d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth(); });
+    } else if(condicaRange==='lastmonth'){
+      var n2=new Date(); n2.setMonth(n2.getMonth()-1);
+      evs = evs.filter(function(e){ var d=new Date(e.ts); return d.getFullYear()===n2.getFullYear() && d.getMonth()===n2.getMonth(); });
+    }
+    if(condicaSearch){
+      var q = condicaSearch.toLowerCase();
+      evs = evs.filter(function(e){
+        return (e.caregiver||'').toLowerCase().indexOf(q)>-1 ||
+               (e.reason||'').toLowerCase().indexOf(q)>-1 ||
+               (e.note||'').toLowerCase().indexOf(q)>-1;
+      });
+    }
+
+    var groups = [];
+    var lastKey=null, curGroup=null;
+    evs.forEach(function(e){
+      var k = dateKey(e.ts);
+      if(k!==lastKey){ curGroup = { key:k, ts:e.ts, items:[] }; groups.push(curGroup); lastKey=k; }
+      curGroup.items.push(e);
+    });
+
+    var groupsHtml = groups.length ? groups.map(function(g){
+      var rows = g.items.map(ledgerRowHtml).join('');
+      return '<div class="ledger-group"><div class="ledger-date">'+fmtDateLong(g.ts)+'</div>'+rows+'</div>';
+    }).join('') : '<p class="empty-note">Nicio înregistrare pentru acest filtru.</p>';
+
+    root.innerHTML =
+      '<div class="toolbar-row">'+
+        '<div class="filters">'+
+          '<select id="condicaRangeSel">'+
+            '<option value="30"'+(condicaRange==='30'?' selected':'')+'>Ultimele 30 zile</option>'+
+            '<option value="month"'+(condicaRange==='month'?' selected':'')+'>Luna aceasta</option>'+
+            '<option value="lastmonth"'+(condicaRange==='lastmonth'?' selected':'')+'>Luna trecută</option>'+
+            '<option value="all"'+(condicaRange==='all'?' selected':'')+'>Tot istoricul</option>'+
+          '</select>'+
+          '<input type="search" id="condicaSearch" placeholder="Caută în notițe, motiv..." value="'+escapeHtml(condicaSearch)+'">'+
+        '</div>'+
+        '<div style="display:flex;gap:8px;">'+
+          '<button class="toolbar-btn" id="condicaExport" type="button">⭳ CSV</button>'+
+          '<button class="toolbar-btn" id="condicaAdd" type="button">+ Adaugă</button>'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-top:14px;">'+groupsHtml+'</div>';
+
+    document.getElementById('condicaRangeSel').addEventListener('change', function(){ condicaRange=this.value; renderCondica(); });
+    document.getElementById('condicaSearch').addEventListener('input', function(){ condicaSearch=this.value; renderCondica(); });
+    document.getElementById('condicaExport').addEventListener('click', exportCSV);
+    document.getElementById('condicaAdd').addEventListener('click', function(){ openEventModal(null); });
+    bindTimelineActions(root);
+  }
+
+  function ledgerRowHtml(e){
+    var badgeCls = e.type==='in'?'in':e.type==='out'?'out':'absent';
+    var badgeText = e.type==='in'?'Sosire':e.type==='out'?'Plecare':'Absență';
+    var metaText = e.type==='absent' ? escapeHtml(e.reason) : ('cu '+escapeHtml(e.caregiver||'—'));
+    return '<div class="ledger-row">'+
+      '<div class="ledger-time font-numeric">'+fmtTime(e.ts)+'</div>'+
+      '<div class="ledger-body">'+
+        '<span class="badge '+badgeCls+'">'+badgeText+'</span>'+
+        '<div class="ledger-meta">'+metaText+'</div>'+
+        (e.note?'<div class="ledger-note">"'+escapeHtml(e.note)+'"</div>':'')+
+      '</div>'+
+      '<div class="ledger-actions"><button type="button" data-edit="'+e.id+'" title="Editează" style="width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;">✎</button>'+
+      '<button type="button" data-del="'+e.id+'" title="Șterge" style="width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;">🗑</button></div>'+
+    '</div>';
+  }
+
+  /* ---------- render: setari ---------- */
+  function renderSetari(){
+    var root = document.getElementById('view-setari');
+    var childrenRows = state.children.map(function(c){
+      return '<div class="list-row"><span class="list-row-name"><span>'+c.emoji+'</span>'+escapeHtml(c.name)+(c.group?' · <span style="color:var(--muted);font-weight:500;">'+escapeHtml(c.group)+'</span>':'')+'</span>'+
+        '<button class="row-x" type="button" data-rm-child="'+c.id+'" title="Șterge">✕</button></div>';
+    }).join('') || '<p class="empty-note">Niciun copil adăugat.</p>';
+
+    var caregiverRows = state.caregivers.map(function(c){
+      return '<div class="list-row"><span class="list-row-name">'+escapeHtml(c)+'</span><button class="row-x" type="button" data-rm-cg="'+escapeHtml(c)+'">✕</button></div>';
+    }).join('');
+    var reasonRows = state.reasons.map(function(r){
+      return '<div class="list-row"><span class="list-row-name">'+escapeHtml(r)+'</span><button class="row-x" type="button" data-rm-reason="'+escapeHtml(r)+'">✕</button></div>';
+    }).join('');
+
+    var theme = state.theme || 'system';
+
+    root.innerHTML =
+      '<div class="settings-card">'+
+        '<div class="settings-title">Copii</div>'+
+        '<div class="settings-hint">Poți ține evidența pentru mai mulți copii deodată.</div>'+
+        childrenRows+
+        '<button class="ghost-btn" type="button" id="openAddChild" style="margin-top:14px;">+ Adaugă copil</button>'+
+      '</div>'+
+      '<div class="settings-card">'+
+        '<div class="settings-title">Persoane care duc / iau copilul</div>'+
+        '<div class="settings-hint">Apar ca listă preselectată la fiecare înregistrare.</div>'+
+        caregiverRows+
+        '<div class="add-row"><input type="text" id="newCaregiverInput" placeholder="ex: Mătușa Ana"><button type="button" id="addCaregiverBtn">Adaugă</button></div>'+
+      '</div>'+
+      '<div class="settings-card">'+
+        '<div class="settings-title">Motive de absență</div>'+
+        reasonRows+
+        '<div class="add-row"><input type="text" id="newReasonInput" placeholder="ex: Programare medicală"><button type="button" id="addReasonBtn">Adaugă</button></div>'+
+      '</div>'+
+      '<div class="settings-card">'+
+        '<div class="settings-title">Aspect</div>'+
+        '<div class="seg" id="themeSeg">'+
+          '<button type="button" data-theme="light" class="'+(theme==='light'?'active':'')+'">☀️ Luminos</button>'+
+          '<button type="button" data-theme="dark" class="'+(theme==='dark'?'active':'')+'">🌙 Întunecat</button>'+
+          '<button type="button" data-theme="system" class="'+(theme==='system'?'active':'')+'">💻 Automat</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="settings-card">'+
+        '<div class="settings-title">Sincronizare între telefoane</div>'+
+        (dbMode
+          ? '<div class="settings-hint">🔗 Activă — oricine deschide acest link (mama, tata...) vede și înregistrează pe aceleași date, live. Tema (luminos/întunecat) rămâne separată pe fiecare telefon.</div>'
+          : '<div class="settings-hint">Datele stau doar în acest browser, pe acest telefon. Pentru sincronizare live între mai multe telefoane, folosește linkul artifactului Pași Mici (nu fișierul .html descărcat) și partajează-l cu celălalt părinte din meniul de share.</div>')+
+      '</div>'+
+      '<div class="settings-card">'+
+        '<div class="settings-title">Datele tale</div>'+
+        '<div class="settings-hint">Fă un backup periodic (.json) ca să nu pierzi istoricul, indiferent de mod.</div>'+
+        '<div class="btn-row">'+
+          '<button class="btn" type="button" id="exportJsonBtn">⭳ Descarcă backup (.json)</button>'+
+          '<label class="btn file-label">⭱ Restaurează backup<input type="file" id="importJsonInput" accept="application/json"></label>'+
+          '<button class="btn danger" type="button" id="resetAllBtn">Șterge tot</button>'+
+        '</div>'+
+      '</div>';
+
+    root.querySelectorAll('[data-rm-child]').forEach(function(b){ b.addEventListener('click', function(){ if(confirm('Ștergi acest copil și toate înregistrările lui?')) removeChild(b.getAttribute('data-rm-child')); }); });
+    root.querySelectorAll('[data-rm-cg]').forEach(function(b){ b.addEventListener('click', function(){ removeCaregiver(b.getAttribute('data-rm-cg')); }); });
+    root.querySelectorAll('[data-rm-reason]').forEach(function(b){ b.addEventListener('click', function(){ removeReason(b.getAttribute('data-rm-reason')); }); });
+    document.getElementById('openAddChild').addEventListener('click', openAddChildModal);
+    document.getElementById('addCaregiverBtn').addEventListener('click', function(){
+      var inp=document.getElementById('newCaregiverInput'); addCaregiver(inp.value.trim()); inp.value='';
+    });
+    document.getElementById('addReasonBtn').addEventListener('click', function(){
+      var inp=document.getElementById('newReasonInput'); addReason(inp.value.trim()); inp.value='';
+    });
+    document.getElementById('themeSeg').addEventListener('click', function(e){
+      var b=e.target.closest('[data-theme]'); if(!b) return; setTheme(b.getAttribute('data-theme'));
+    });
+    document.getElementById('exportJsonBtn').addEventListener('click', exportJSON);
+    document.getElementById('importJsonInput').addEventListener('change', function(e){
+      if(e.target.files && e.target.files[0]) importJSONFile(e.target.files[0]);
+    });
+    document.getElementById('resetAllBtn').addEventListener('click', function(){
+      if(confirm('Sigur ștergi toate datele și revii la exemplul inițial? Acțiunea nu poate fi anulată.')) resetAll();
+    });
+  }
+
+  /* ---------- theme toggle (topbar quick button) ---------- */
+  document.getElementById('themeToggle').addEventListener('click', function(){
+    var order = ['system','light','dark'];
+    var idx = order.indexOf(state.theme||'system');
+    setTheme(order[(idx+1)%order.length]);
+  });
+
+  /* ---------- demo banner ---------- */
+  document.getElementById('clearDemoBtn').addEventListener('click', function(){
+    if(confirm('Ștergi datele exemplu și pornești cu o pagină curată?')) clearDemoAndStart();
+  });
+
+  /* ---------- clock ---------- */
+  function tickClock(){
+    var d = new Date();
+    document.getElementById('liveClock').textContent = pad2(d.getHours())+':'+pad2(d.getMinutes())+':'+pad2(d.getSeconds());
+  }
+
+  /* ---------- global render ---------- */
+  function renderAll(){
+    document.getElementById('demoBanner').hidden = !state.isDemo;
+    renderChildStrip();
+    if(currentView==='azi') renderAzi();
+    else if(currentView==='calendar') renderCalendar();
+    else if(currentView==='condica') renderCondica();
+    else if(currentView==='setari') renderSetari();
+  }
+
+  /* ---------- boot ---------- */
+  if(state.theme && state.theme!=='system') document.documentElement.setAttribute('data-theme', state.theme);
+  renderAll();
+  tickClock();
+  setInterval(tickClock, 1000);
+  setInterval(function(){ if(currentView==='azi') renderAzi(); }, 30000);
+
+  window.PasiMici = { closeModal: closeModal };
+})();
+</script>
+</body>
+</html>
