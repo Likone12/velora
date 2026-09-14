@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#4A5FE0">
-<meta name="description" content="Pași Mici — condică digitală pentru evidența zilnică la creșă: sosiri, plecări și absențe într-o atingere, cu calendar, statistici, istoric editabil, reminder-e cu export în calendar și sincronizare între telefoane.">
+<meta name="description" content="Pași Mici — condică digitală pentru evidența zilnică la creșă: sosiri, plecări, absențe, reminder-e cu export în calendar, buget și sincronizare între telefoane.">
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -198,6 +198,15 @@
   .ledger-row.done .rem-check{ background:var(--success-soft); border-color:var(--success); }
   .ledger-row.done .tl-title{ text-decoration:line-through; color:var(--muted); }
 
+  /* BUDGET */
+  .budget-amount{ font-weight:700; font-size:14px; color:var(--ink); white-space:nowrap; padding-top:3px; }
+  .budget-amount span{ font-size:11px; font-weight:600; color:var(--muted); }
+  .budget-cat-row{ display:flex; align-items:center; gap:10px; padding:8px 0; font-size:12.5px; }
+  .budget-cat-label{ width:88px; flex-shrink:0; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .budget-cat-bar{ flex:1; height:8px; background:var(--surface-2); border-radius:999px; overflow:hidden; }
+  .budget-cat-fill{ height:100%; background:var(--accent); border-radius:999px; }
+  .budget-cat-value{ width:74px; text-align:right; flex-shrink:0; font-weight:600; color:var(--ink); }
+
   .status-headline{ font-family:var(--font-display); font-size:30px; font-weight:600; line-height:1.15; margin-bottom:4px; }
   .status-sub{ font-size:13.5px; color:var(--muted); margin-bottom:20px; }
   .status-sub .t{ font-family:var(--font-mono); color:var(--ink); font-weight:600; }
@@ -363,6 +372,7 @@
   }
   .tab span{ font-size:10.5px; font-weight:700; letter-spacing:.01em; }
   .tab.active{ background:var(--accent-soft); color:var(--accent); }
+  @media (max-width:380px){ .tab{ padding:9px 2px; } .tab span{ font-size:8.5px; } }
 
   /* MODAL */
   .modal-backdrop{
@@ -432,6 +442,7 @@
   <main class="view" id="view-calendar" hidden></main>
   <main class="view" id="view-condica" hidden></main>
   <main class="view" id="view-reminder" hidden></main>
+  <main class="view" id="view-buget" hidden></main>
   <main class="view" id="view-setari" hidden></main>
 
   <nav class="tabbar" id="tabbar">
@@ -439,6 +450,7 @@
     <button class="tab" data-view="calendar" type="button">🗓️<span>Calendar</span></button>
     <button class="tab" data-view="condica" type="button">📖<span>Condică</span></button>
     <button class="tab" data-view="reminder" type="button">🔔<span>Reminder</span></button>
+    <button class="tab" data-view="buget" type="button">💰<span>Buget</span></button>
     <button class="tab" data-view="setari" type="button">⚙️<span>Setări</span></button>
   </nav>
 </div>
@@ -502,11 +514,13 @@
       lastCaregiver: 'Mama',
       events: [],
       reminders: [],
+      budget: [],
       theme: 'system',
       isDemo: false
     };
   }
   function addDays(d,n){ var nd=new Date(d); nd.setDate(nd.getDate()+n); return nd; }
+  var BUDGET_CATEGORIES = ['Taxă lunară','Rechizite','Excursie','Materiale','Altele'];
 
   function mkEvent(childId, type, ts, extra){
     return Object.assign({ id:uid(), childId:childId, type:type, ts:ts, caregiver:'', reason:'', note:'' }, extra||{});
@@ -556,6 +570,11 @@
       { id:uid(), childId:child.id, title:'🏊 Înot', date: toInputDate(addDays(today,3).getTime()), time:'17:00', note:'Aduce costum și prosop.', done:false },
       { id:uid(), childId:child.id, title:'🩺 Control pediatru', date: toInputDate(addDays(today,9).getTime()), time:'10:30', note:'', done:false }
     ];
+    s.budget = [
+      { id:uid(), childId:child.id, category:'Taxă lunară', amount:450, date: toInputDate(addDays(today,-35).getTime()), note:'' },
+      { id:uid(), childId:child.id, category:'Taxă lunară', amount:450, date: toInputDate(addDays(today,-5).getTime()), note:'' },
+      { id:uid(), childId:child.id, category:'Rechizite', amount:80, date: toInputDate(addDays(today,-12).getTime()), note:'Scutece, șervețele' }
+    ];
     return s;
   }
 
@@ -585,7 +604,7 @@
   /* ---------- shared sync (db capability) ---------- */
   var claudeApi = (typeof window!=='undefined' && window.claude && typeof window.claude.use==='function') ? window.claude : null;
   var dbMode = false;
-  var dbApi = null, configRef = null, eventsCol = null, remindersCol = null;
+  var dbApi = null, configRef = null, eventsCol = null, remindersCol = null, budgetCol = null;
 
   function configFromState(s){
     return { children:s.children, caregivers:s.caregivers, reasons:s.reasons, lastCaregiver:s.lastCaregiver, isDemo:!!s.isDemo };
@@ -605,6 +624,9 @@
   }
   function reminderDocData(r){
     return { childId:r.childId||'', title:r.title, date:r.date, time:r.time||'', note:r.note||'', done:!!r.done };
+  }
+  function budgetDocData(b){
+    return { childId:b.childId||'', category:b.category, amount:+b.amount||0, date:b.date, note:b.note||'' };
   }
 
   function persistNewEvent(ev){
@@ -637,6 +659,14 @@
     if(dbMode){ remindersCol.doc(id).delete().catch(showDbErrorToast); }
     else { state.reminders = state.reminders.filter(function(x){ return x.id!==id; }); saveState(); renderAll(); }
   }
+  function persistNewBudget(b){
+    if(dbMode){ budgetCol.doc(b.id).set(budgetDocData(b)).catch(showDbErrorToast); }
+    else { state.budget.push(b); saveState(); renderAll(); }
+  }
+  function persistDeleteBudget(id){
+    if(dbMode){ budgetCol.doc(id).delete().catch(showDbErrorToast); }
+    else { state.budget = state.budget.filter(function(x){ return x.id!==id; }); saveState(); renderAll(); }
+  }
   function persistConfig(fields){
     Object.assign(state, fields);
     if(dbMode){ configRef.update(fields).catch(showDbErrorToast); renderAll(); }
@@ -659,8 +689,11 @@
   function seedRemindersIntoDb(reminders){
     reminders.forEach(function(r){ remindersCol.doc(r.id).set(reminderDocData(r)).catch(function(){}); });
   }
+  function seedBudgetIntoDb(budget){
+    budget.forEach(function(b){ budgetCol.doc(b.id).set(budgetDocData(b)).catch(function(){}); });
+  }
 
-  var unsubConfig=null, unsubEvents=null, unsubReminders=null;
+  var unsubConfig=null, unsubEvents=null, unsubReminders=null, unsubBudget=null;
   function subscribeDb(){
     dbMode = true;
     setSyncBadge('synced');
@@ -686,6 +719,11 @@
       state.reminders = qsnap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
       renderAll();
     }, function(){ /* keep last known reminders on transient errors */ });
+
+    unsubBudget = budgetCol.orderBy('date','desc').limit(1000).onSnapshot(function(qsnap){
+      state.budget = qsnap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
+      renderAll();
+    }, function(){ /* keep last known budget on transient errors */ });
   }
 
   function initDbMode(){
@@ -696,6 +734,7 @@
         configRef.set(configFromState(seed)).catch(function(){});
         seedEventsIntoDb(seed.events);
         seedRemindersIntoDb(seed.reminders);
+        seedBudgetIntoDb(seed.budget);
       }
       subscribeDb();
     }).catch(function(){ dbMode=false; setSyncBadge('off'); });
@@ -708,6 +747,7 @@
       configRef = db.doc('config/main');
       eventsCol = db.collection('events');
       remindersCol = db.collection('reminders');
+      budgetCol = db.collection('budget');
       initDbMode();
     }).catch(function(){});
   }
@@ -864,7 +904,9 @@
     fresh.isDemo = false;
     if(dbMode){
       wipeCollectionDb(eventsCol, function(){
-        wipeCollectionDb(remindersCol, function(){ persistConfigReplace(fresh); openAddChildModal(); });
+        wipeCollectionDb(remindersCol, function(){
+          wipeCollectionDb(budgetCol, function(){ persistConfigReplace(fresh); openAddChildModal(); });
+        });
       });
     } else { persistConfigReplace(fresh); openAddChildModal(); }
   }
@@ -875,7 +917,9 @@
     if(dbMode){
       wipeCollectionDb(eventsCol, function(){
         wipeCollectionDb(remindersCol, function(){
-          persistConfigReplace(seed); seedEventsIntoDb(seed.events); seedRemindersIntoDb(seed.reminders);
+          wipeCollectionDb(budgetCol, function(){
+            persistConfigReplace(seed); seedEventsIntoDb(seed.events); seedRemindersIntoDb(seed.reminders); seedBudgetIntoDb(seed.budget);
+          });
         });
       });
     } else { persistConfigReplace(seed); }
@@ -896,12 +940,15 @@
         var s = JSON.parse(String(reader.result));
         if(!s || !Array.isArray(s.children) || !Array.isArray(s.events)) throw new Error('format invalid');
         s.reminders = Array.isArray(s.reminders) ? s.reminders : [];
+        s.budget = Array.isArray(s.budget) ? s.budget : [];
         s.theme = state.theme;
         if(dbMode){
           wipeCollectionDb(eventsCol, function(){
             wipeCollectionDb(remindersCol, function(){
-              persistConfigReplace(s); seedEventsIntoDb(s.events); seedRemindersIntoDb(s.reminders);
-              showToast('Backup importat și sincronizat.');
+              wipeCollectionDb(budgetCol, function(){
+                persistConfigReplace(s); seedEventsIntoDb(s.events); seedRemindersIntoDb(s.reminders); seedBudgetIntoDb(s.budget);
+                showToast('Backup importat și sincronizat.');
+              });
             });
           });
         } else { persistConfigReplace(s); showToast('Backup importat cu succes.'); }
@@ -1063,7 +1110,7 @@
   var currentView = 'azi';
   function switchView(name){
     currentView = name;
-    ['azi','calendar','condica','reminder','setari'].forEach(function(v){
+    ['azi','calendar','condica','reminder','buget','setari'].forEach(function(v){
       document.getElementById('view-'+v).hidden = (v!==name);
     });
     document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.getAttribute('data-view')===name); });
@@ -1071,6 +1118,7 @@
     if(name==='calendar') renderCalendar();
     if(name==='condica') renderCondica();
     if(name==='reminder') renderReminder();
+    if(name==='buget') renderBudget();
     if(name==='setari') renderSetari();
   }
   document.getElementById('tabbar').addEventListener('click', function(e){
@@ -1529,6 +1577,122 @@
     });
   }
 
+  /* ---------- render: buget ---------- */
+  function budgetMonthTotal(year, month){
+    return state.budget.filter(function(b){ var d=new Date(b.date+'T00:00:00'); return d.getFullYear()===year && d.getMonth()===month; })
+      .reduce(function(s,b){ return s+(+b.amount||0); }, 0);
+  }
+  function budgetYearTotal(year){
+    return state.budget.filter(function(b){ return b.date.slice(0,4)===String(year); }).reduce(function(s,b){ return s+(+b.amount||0); }, 0);
+  }
+  function budgetMonthlyAverage(){
+    if(!state.budget.length) return 0;
+    var months = {};
+    state.budget.forEach(function(b){ months[b.date.slice(0,7)] = true; });
+    var total = state.budget.reduce(function(s,b){ return s+(+b.amount||0); }, 0);
+    return total / (Object.keys(months).length || 1);
+  }
+  function budgetCategoryBreakdown(year, month){
+    var totals = {};
+    state.budget.filter(function(b){ var d=new Date(b.date+'T00:00:00'); return d.getFullYear()===year && d.getMonth()===month; })
+      .forEach(function(b){ totals[b.category] = (totals[b.category]||0) + (+b.amount||0); });
+    return totals;
+  }
+  function categoryBreakdownHtml(year, month){
+    var totals = budgetCategoryBreakdown(year, month);
+    var keys = Object.keys(totals);
+    if(!keys.length) return '';
+    var max = Math.max.apply(null, keys.map(function(k){ return totals[k]; }));
+    var rows = keys.sort(function(a,b){ return totals[b]-totals[a]; }).map(function(k){
+      var pct = max ? Math.round(totals[k]/max*100) : 0;
+      return '<div class="budget-cat-row"><span class="budget-cat-label">'+escapeHtml(k)+'</span>'+
+        '<div class="budget-cat-bar"><div class="budget-cat-fill" style="width:'+pct+'%"></div></div>'+
+        '<span class="budget-cat-value font-numeric">'+Math.round(totals[k])+' RON</span></div>';
+    }).join('');
+    return '<div class="settings-card"><div class="settings-title">Pe categorii, luna aceasta</div>'+rows+'</div>';
+  }
+  function budgetRowHtml(b){
+    var iconBtnStyle = 'width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;';
+    return '<div class="ledger-row">'+
+      '<div class="ledger-body">'+
+        '<div class="ledger-meta font-numeric">'+fmtRomDateShort(b.date)+'</div>'+
+        '<div class="tl-title">'+escapeHtml(b.category)+'</div>'+
+        (b.note?'<div class="ledger-note">'+escapeHtml(b.note)+'</div>':'')+
+      '</div>'+
+      '<div class="budget-amount font-numeric">'+Math.round(+b.amount)+'<span> RON</span></div>'+
+      '<div class="ledger-actions"><button type="button" data-del-budget="'+b.id+'" title="Șterge" style="'+iconBtnStyle+'">🗑</button></div>'+
+    '</div>';
+  }
+  function renderBudget(){
+    var root = document.getElementById('view-buget');
+    var child = activeChild();
+    var now = new Date();
+    var monthTotal = budgetMonthTotal(now.getFullYear(), now.getMonth());
+    var yearTotal = budgetYearTotal(now.getFullYear());
+    var avg = budgetMonthlyAverage();
+
+    var statHtml =
+      '<div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">'+
+        '<div class="stat-tile"><div class="stat-value font-numeric">'+Math.round(monthTotal)+'</div><div class="stat-label">RON luna asta</div></div>'+
+        '<div class="stat-tile"><div class="stat-value font-numeric">'+Math.round(yearTotal)+'</div><div class="stat-label">RON anul acesta</div></div>'+
+        '<div class="stat-tile"><div class="stat-value font-numeric">'+Math.round(avg)+'</div><div class="stat-label">Medie / lună</div></div>'+
+      '</div>';
+
+    var sorted = state.budget.slice().sort(function(a,b){ return a.date<b.date?1:(a.date>b.date?-1:0); });
+    var groups = []; var lastKey=null, cur=null;
+    sorted.forEach(function(b){
+      var k = b.date.slice(0,7);
+      if(k!==lastKey){ cur = { key:k, items:[] }; groups.push(cur); lastKey=k; }
+      cur.items.push(b);
+    });
+    var groupsHtml = groups.length ? groups.map(function(g){
+      var d = new Date(g.key+'-01T00:00:00');
+      var label = MONTHS[d.getMonth()]+' '+d.getFullYear();
+      var subtotal = g.items.reduce(function(s,b){ return s+(+b.amount||0); }, 0);
+      return '<div class="ledger-group"><div class="ledger-date" style="display:flex;justify-content:space-between;"><span>'+label+'</span><span>'+Math.round(subtotal)+' RON</span></div>'+
+        g.items.map(budgetRowHtml).join('')+'</div>';
+    }).join('') : '<p class="empty-note">Nicio cheltuială înregistrată încă.</p>';
+
+    root.innerHTML =
+      statHtml+
+      '<div class="settings-card">'+
+        '<div class="settings-title">Adaugă o cheltuială'+(child?' pentru '+escapeHtml(child.name):'')+'</div>'+
+        '<div class="chip-row" id="budgetPresets">'+
+          BUDGET_CATEGORIES.map(function(c){ return '<button type="button" class="chip" data-preset="'+escapeHtml(c)+'">'+escapeHtml(c)+'</button>'; }).join('')+
+        '</div>'+
+        '<div class="form-row" style="margin-top:14px;"><label>Ce</label><input type="text" id="budCategory" placeholder="ex: Taxă lunară"></div>'+
+        '<div class="form-grid2">'+
+          '<div class="form-row"><label>Sumă (RON)</label><input type="number" id="budAmount" placeholder="0" min="0" step="0.01" inputmode="decimal"></div>'+
+          '<div class="form-row"><label>Data</label><input type="date" id="budDate" value="'+toInputDate(Date.now())+'"></div>'+
+        '</div>'+
+        '<div class="form-row"><label>Notă (opțional)</label><input type="text" id="budNote" placeholder="ex: luna octombrie"></div>'+
+        '<button class="btn primary" type="button" id="addBudgetBtn" style="width:100%;">+ Adaugă cheltuială</button>'+
+      '</div>'+
+      categoryBreakdownHtml(now.getFullYear(), now.getMonth())+
+      '<div class="section-head" style="margin-top:6px;"><span class="section-title">Istoric cheltuieli</span><span class="section-hint">'+state.budget.length+'</span></div>'+
+      '<div style="margin-top:8px;">'+groupsHtml+'</div>';
+
+    document.getElementById('budgetPresets').addEventListener('click', function(e){
+      var b = e.target.closest('[data-preset]'); if(!b) return;
+      document.getElementById('budCategory').value = b.getAttribute('data-preset');
+    });
+    document.getElementById('addBudgetBtn').addEventListener('click', function(){
+      var category = document.getElementById('budCategory').value.trim();
+      var amount = parseFloat(document.getElementById('budAmount').value);
+      var date = document.getElementById('budDate').value;
+      if(!category || !date || !(amount>=0)) return;
+      var b = { id:uid(), childId: child?child.id:'', category:category, amount:amount, date:date, note:document.getElementById('budNote').value.trim() };
+      persistNewBudget(b);
+      document.getElementById('budCategory').value=''; document.getElementById('budAmount').value=''; document.getElementById('budNote').value='';
+    });
+    root.querySelectorAll('[data-del-budget]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-del-budget');
+        confirmAction('Ștergi această cheltuială?', function(){ persistDeleteBudget(id); }, { danger:true, confirmLabel:'Șterge' });
+      });
+    });
+  }
+
   /* ---------- render: setari ---------- */
   function renderSetari(){
     var root = document.getElementById('view-setari');
@@ -1641,6 +1805,7 @@
     else if(currentView==='calendar') renderCalendar();
     else if(currentView==='condica') renderCondica();
     else if(currentView==='reminder') renderReminder();
+    else if(currentView==='buget') renderBudget();
     else if(currentView==='setari') renderSetari();
   }
 
