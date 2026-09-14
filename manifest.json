@@ -1,0 +1,20 @@
+{
+  "name": "Pași Mici — Condică Creșă",
+  "short_name": "Pași Mici",
+  "description": "Evidența zilnică a sosirilor, plecărilor și absențelor la creșă, cu sincronizare între telefoane.",
+  "start_url": "./cresa.html",
+  "scope": "./",
+  "id": "./cresa.html",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#F1F4FA",
+  "theme_color": "#4A5FE0",
+  "orientation": "portrait",
+  "lang": "ro",
+  "dir": "ltr",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
