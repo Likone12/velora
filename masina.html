@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0F172A">
+<meta name="description" content="Mașina Mea — documente, asigurări, rovinietă, ITP, schimb de ulei, kilometraj, alimentări și cheltuieli, cu remindere în calendarul iPhone.">
+<link rel="manifest" href="masina.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mașina Mea">
+<link rel="apple-touch-icon" href="icons/masina-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/masina-192.png">
+<title>Mașina Mea</title>
+<style>
+  :root{
+    --bg:#F2F3F7;
+    --surface:#FFFFFF;
+    --surface-2:#E9EBF1;
+    --ink:#0F172A;
+    --muted:#64748B;
+    --line:#DDE1EA;
+    --accent:#2563EB;
+    --accent-soft:#DBE6FD;
+    --ok:#15803D;
+    --ok-soft:#DCFCE7;
+    --warn:#B45309;
+    --warn-soft:#FEF3C7;
+    --bad:#B91C1C;
+    --bad-soft:#FEE2E2;
+    --plate-blue:#1D4ED8;
+    --shadow:0 1px 2px rgba(15,23,42,.06), 0 4px 16px rgba(15,23,42,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0B0F17; --surface:#151B26; --surface-2:#1E2532; --ink:#E8ECF3; --muted:#94A0B4; --line:#2A3242;
+      --accent:#60A5FA; --accent-soft:#1A2B47; --ok:#4ADE80; --ok-soft:#14301F; --warn:#FBBF24; --warn-soft:#3A2C0C;
+      --bad:#F87171; --bad-soft:#3B1515; --shadow:none;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0B0F17; --surface:#151B26; --surface-2:#1E2532; --ink:#E8ECF3; --muted:#94A0B4; --line:#2A3242;
+    --accent:#60A5FA; --accent-soft:#1A2B47; --ok:#4ADE80; --ok-soft:#14301F; --warn:#FBBF24; --warn-soft:#3A2C0C;
+    --bad:#F87171; --bad-soft:#3B1515; --shadow:none;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ background:var(--bg); color:var(--ink); }
+  body{
+    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    font-size:16px; line-height:1.4; min-height:100vh;
+    padding:calc(env(safe-area-inset-top) + 8px) 16px calc(env(safe-area-inset-bottom) + 92px);
+  }
+  button,input,select,textarea{ font:inherit; color:inherit; }
+  button{ cursor:pointer; border:0; background:none; }
+  .wrap{ max-width:640px; margin:0 auto; }
+  h1{ font-size:30px; font-weight:800; letter-spacing:-.02em; margin:8px 0 14px; }
+  h2{ font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:22px 4px 8px; display:flex; justify-content:space-between; align-items:center; }
+  h2 button{ text-transform:none; letter-spacing:0; font-size:15px; color:var(--accent); font-weight:600; }
+  .card{ background:var(--surface); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; }
+  .pad{ padding:16px; }
+  .row{ display:flex; align-items:center; gap:12px; padding:13px 16px; border-top:1px solid var(--line); width:100%; text-align:left; }
+  .row:first-child{ border-top:0; }
+  button.row:active{ background:var(--surface-2); }
+  .row .ic{ width:36px; height:36px; border-radius:10px; background:var(--surface-2); display:grid; place-items:center; font-size:19px; flex:none; }
+  .row .main{ flex:1; min-width:0; }
+  .row .t{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row .s{ font-size:13px; color:var(--muted); }
+  .row .end{ text-align:right; flex:none; font-variant-numeric:tabular-nums; }
+  .muted{ color:var(--muted); }
+  .small{ font-size:13px; }
+  .pill{ display:inline-block; font-size:12px; font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap; }
+  .pill.ok{ background:var(--ok-soft); color:var(--ok); }
+  .pill.warn{ background:var(--warn-soft); color:var(--warn); }
+  .pill.bad{ background:var(--bad-soft); color:var(--bad); }
+  .pill.na{ background:var(--surface-2); color:var(--muted); }
+
+  /* Plate */
+  .hero{ padding:18px 16px 16px; }
+  .plate{ display:inline-flex; align-items:stretch; border:2px solid #111; border-radius:6px; background:#fff; color:#111; overflow:hidden; font-weight:800; }
+  .plate .eu{ background:var(--plate-blue); color:#fff; font-size:11px; padding:4px 5px 3px; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:2px; }
+  .plate .eu i{ font-style:normal; font-size:9px; color:#FDE047; letter-spacing:-1px; }
+  .plate .no{ font-size:26px; letter-spacing:.06em; padding:2px 12px; font-family:"DIN Alternate", "Arial Narrow", Arial, sans-serif; }
+  .hero .model{ font-size:20px; font-weight:700; margin-top:12px; }
+  .hero .vin{ font-family:ui-monospace, Menlo, monospace; font-size:13px; color:var(--muted); margin-top:2px; word-break:break-all; }
+  .kmbig{ display:flex; align-items:baseline; gap:6px; margin-top:12px; }
+  .kmbig b{ font-size:28px; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+
+  .quick{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:12px; }
+  .quick button{ background:var(--surface); box-shadow:var(--shadow); border-radius:14px; padding:12px 4px 10px; display:flex; flex-direction:column; align-items:center; gap:4px; font-size:12px; font-weight:600; }
+  .quick button span{ font-size:22px; }
+  .quick button:active{ transform:scale(.97); }
+
+  .stats{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .stat{ background:var(--surface); box-shadow:var(--shadow); border-radius:14px; padding:12px 14px; }
+  .stat .l{ font-size:12px; color:var(--muted); font-weight:600; }
+  .stat .v{ font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.01em; margin-top:2px; }
+  .stat .v small{ font-size:13px; font-weight:600; color:var(--muted); }
+
+  .bars{ display:flex; align-items:flex-end; gap:5px; height:120px; padding:12px 16px 0; }
+  .bars div{ flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%; gap:4px; }
+  .bars i{ display:block; width:100%; background:var(--accent); border-radius:4px 4px 0 0; min-height:2px; }
+  .bars div.cur i{ background:var(--ok); }
+  .bars span{ font-size:10px; color:var(--muted); }
+  .catbar{ height:6px; border-radius:3px; background:var(--surface-2); margin-top:6px; overflow:hidden; }
+  .catbar i{ display:block; height:100%; background:var(--accent); border-radius:3px; }
+
+  .seg{ display:flex; background:var(--surface-2); border-radius:10px; padding:2px; margin-bottom:10px; }
+  .seg button{ flex:1; padding:7px 4px; border-radius:8px; font-size:14px; font-weight:600; color:var(--muted); }
+  .seg button.on{ background:var(--surface); color:var(--ink); box-shadow:var(--shadow); }
+
+  .empty{ padding:22px 16px; text-align:center; color:var(--muted); font-size:14px; }
+  .banner{ border-radius:14px; padding:12px 14px; margin-top:12px; font-size:14px; display:flex; gap:10px; align-items:flex-start; }
+  .banner.bad{ background:var(--bad-soft); color:var(--bad); }
+  .banner.warn{ background:var(--warn-soft); color:var(--warn); }
+  .banner.info{ background:var(--accent-soft); color:var(--accent); }
+  .banner b{ font-weight:700; }
+  .btn{ display:block; width:100%; padding:13px; border-radius:12px; background:var(--accent); color:#fff; font-weight:700; text-align:center; }
+  .btn.ghost{ background:var(--surface-2); color:var(--ink); }
+  .btn.danger{ background:var(--bad-soft); color:var(--bad); }
+  .btn + .btn{ margin-top:8px; }
+
+  /* Tab bar */
+  .tabbar{ position:fixed; left:0; right:0; bottom:0; z-index:20; background:color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom); }
+  .tabbar .in{ max-width:640px; margin:0 auto; display:grid; grid-template-columns:repeat(5,1fr); }
+  .tabbar button{ padding:8px 2px 6px; display:flex; flex-direction:column; align-items:center; gap:1px; font-size:10.5px; font-weight:600; color:var(--muted); }
+  .tabbar button span{ font-size:21px; filter:grayscale(1); opacity:.7; }
+  .tabbar button.on{ color:var(--accent); }
+  .tabbar button.on span{ filter:none; opacity:1; }
+
+  /* Sheet */
+  .scrim{ position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:40; display:none; }
+  .scrim.on{ display:block; }
+  .sheet{ position:fixed; left:0; right:0; bottom:0; z-index:50; background:var(--bg); border-radius:18px 18px 0 0; max-height:92vh; overflow:auto; transform:translateY(105%); visibility:hidden; transition:transform .25s ease, visibility .25s; padding:0 16px calc(env(safe-area-inset-bottom) + 20px); }
+  .sheet.on{ transform:none; visibility:visible; }
+  .sheet .hd{ position:sticky; top:0; background:var(--bg); display:flex; justify-content:space-between; align-items:center; padding:14px 0 10px; z-index:1; }
+  .sheet .hd b{ font-size:17px; }
+  .sheet .hd button{ color:var(--accent); font-weight:600; font-size:16px; padding:4px; }
+  .sheet .hd button.save{ font-weight:800; }
+  .sheet .in{ max-width:640px; margin:0 auto; }
+  .field{ display:block; padding:10px 16px; border-top:1px solid var(--line); }
+  .field:first-child{ border-top:0; }
+  .field > span{ display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:3px; }
+  .field input, .field select, .field textarea{ width:100%; border:0; background:transparent; outline:none; font-size:17px; padding:2px 0; min-height:28px; }
+  .field textarea{ min-height:64px; resize:vertical; }
+  .field.chk{ display:flex; justify-content:space-between; align-items:center; }
+  .field.chk input{ width:22px; height:22px; accent-color:var(--accent); }
+  .hint{ font-size:12px; color:var(--muted); padding:8px 4px 0; }
+
+  .toast{ position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom) + 84px); transform:translateX(-50%); background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:12px; font-size:14px; font-weight:600; z-index:60; opacity:0; transition:opacity .2s; pointer-events:none; max-width:calc(100% - 32px); text-align:center; }
+  .toast.on{ opacity:1; }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<nav class="tabbar"><div class="in" id="tabs"></div></nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"><div class="in" id="sheetIn"></div></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="importFile" accept="application/json,.json" class="hidden">
+
+<script>
+(function(){
+  'use strict';
+
+  var STORAGE_KEY = 'masina-mea-v1';
+  var DAY = 86400000;
+  var MONTHS = ['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','nov','dec'];
+
+  // ---------- Catalogs ----------
+  var DOC_TYPES = {
+    rovinieta: { label:'Rovinietă', ic:'🛣️', remind:14 },
+    rca:       { label:'Asigurare RCA', ic:'🛡️', remind:30 },
+    casco:     { label:'CASCO', ic:'🧰', remind:30 },
+    itp:       { label:'ITP', ic:'🔍', remind:30 },
+    impozit:   { label:'Impozit auto', ic:'🏛️', remind:30 },
+    trusa:     { label:'Trusă medicală', ic:'⛑️', remind:30 },
+    extinctor: { label:'Extinctor', ic:'🧯', remind:30 },
+    permis:    { label:'Permis conducere', ic:'🪪', remind:60 },
+    asistenta: { label:'Asistență rutieră', ic:'🚨', remind:14 },
+    altul:     { label:'Alt document', ic:'📄', remind:14 }
+  };
+  // Documents every car in Romania needs; shown on the dashboard even before they are filled in.
+  var REQUIRED_DOCS = ['rovinieta','rca','itp','impozit','trusa','extinctor'];
+
+  var SERVICE_TYPES = {
+    ulei:        { label:'Schimb ulei + filtru ulei', ic:'🛢️', km:15000, months:12 },
+    revizie:     { label:'Revizie generală', ic:'🧑‍🔧', km:30000, months:24 },
+    filtru_aer:  { label:'Filtru aer', ic:'💨', km:30000, months:24 },
+    filtru_polen:{ label:'Filtru polen (habitaclu)', ic:'🌼', km:15000, months:12 },
+    filtru_comb: { label:'Filtru combustibil', ic:'⛽', km:60000, months:48 },
+    frane:       { label:'Plăcuțe / discuri frână', ic:'🛑', km:40000, months:0 },
+    lichid_frana:{ label:'Lichid de frână', ic:'💧', km:0, months:24 },
+    antigel:     { label:'Antigel', ic:'❄️', km:0, months:48 },
+    distributie: { label:'Kit distribuție', ic:'⚙️', km:120000, months:72 },
+    bujii:       { label:'Bujii', ic:'⚡', km:60000, months:48 },
+    baterie:     { label:'Baterie', ic:'🔋', km:0, months:0 },
+    anvelope:    { label:'Anvelope (schimb sezon)', ic:'🛞', km:0, months:0 },
+    climatizare: { label:'Igienizare / încărcare AC', ic:'🌬️', km:0, months:12 },
+    altul:       { label:'Altă lucrare', ic:'🔧', km:0, months:0 }
+  };
+
+  var EXP_CATS = {
+    combustibil:{ label:'Combustibil', ic:'⛽' },
+    service:    { label:'Service / reparații', ic:'🔧' },
+    piese:      { label:'Piese / accesorii', ic:'🔩' },
+    anvelope:   { label:'Anvelope', ic:'🛞' },
+    asigurare:  { label:'Asigurări', ic:'🛡️' },
+    taxe:       { label:'Taxe & rovinietă', ic:'🏛️' },
+    parcare:    { label:'Parcare / taxe drum', ic:'🅿️' },
+    spalatorie: { label:'Spălătorie', ic:'🧽' },
+    amenzi:     { label:'Amenzi', ic:'🚔' },
+    rata:       { label:'Rată / leasing', ic:'🏦' },
+    altele:     { label:'Altele', ic:'📦' }
+  };
+  var DOC_EXP_CAT = { rovinieta:'taxe', rca:'asigurare', casco:'asigurare', itp:'service', impozit:'taxe', trusa:'piese', extinctor:'piese', permis:'taxe', asistenta:'asigurare', altul:'altele' };
+
+  // ---------- Utils ----------
+  function uid(){ return Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function pad2(n){ return (n<10?'0':'')+n; }
+  function parseD(s, endOfDay){
+    if(!s) return null;
+    var m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(s);
+    if(!m) return null;
+    var h = m[4]!=null ? +m[4] : (endOfDay?23:0), mi = m[5]!=null ? +m[5] : (endOfDay?59:0);
+    return new Date(+m[1], +m[2]-1, +m[3], h, mi);
+  }
+  function fmtD(s){
+    var d = typeof s==='string' ? parseD(s) : s; if(!d) return '—';
+    var out = pad2(d.getDate())+'.'+pad2(d.getMonth()+1)+'.'+d.getFullYear();
+    if(typeof s==='string' && s.length>10) out += ' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
+    return out;
+  }
+  function isoDate(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+  function today(){ return isoDate(new Date()); }
+  function addMonths(d, n){ var r=new Date(d); var day=r.getDate(); r.setDate(1); r.setMonth(r.getMonth()+n); r.setDate(Math.min(day, new Date(r.getFullYear(), r.getMonth()+1, 0).getDate())); return r; }
+  function startOfDay(d){ var r=new Date(d); r.setHours(0,0,0,0); return r; }
+  function daysUntil(d){ return Math.round((startOfDay(d) - startOfDay(new Date()))/DAY); }
+  function money(n){ return (Math.round((n||0)*100)/100).toLocaleString('ro-RO', { minimumFractionDigits:0, maximumFractionDigits:2 })+' lei'; }
+  function moneyShort(n){ return Math.round(n||0).toLocaleString('ro-RO'); }
+  function km(n){ return n==null ? '—' : Math.round(n).toLocaleString('ro-RO')+' km'; }
+  function num(v){ if(v===''||v==null) return null; var n=parseFloat(String(v).replace(',','.')); return isNaN(n)?null:n; }
+  function relDays(n){
+    if(n<0) return 'expirat de '+(-n)+(n===-1?' zi':' zile');
+    if(n===0) return 'expiră azi';
+    if(n===1) return 'mâine';
+    return 'în '+n+' zile';
+  }
+  function statusOf(days, kmLeft, remindDays){
+    var r = remindDays==null ? 30 : remindDays;
+    if((days!=null && days<0) || (kmLeft!=null && kmLeft<0)) return 'bad';
+    if((days!=null && days<=r) || (kmLeft!=null && kmLeft<=1000)) return 'warn';
+    return 'ok';
+  }
+
+  // ---------- State ----------
+  // A private build can pre-fill the car via window.MASINA_PRESET (see android/build.sh); the public page starts empty.
+  function defaultState(){
+    var preset = window.MASINA_PRESET || {};
+    var car = { plate:'', vin:'', make:'', model:'', year:null, category:'Autoturism', fuel:'', color:'', engine:'', notes:'' };
+    return {
+      v:1,
+      car:Object.assign(car, preset.car || {}),
+      docs:(preset.docs || []).map(function(d){ return Object.assign({ id:uid() }, d); }),
+      services:[], odometer:[], expenses:[], reminders:[],
+      settings:{ notified:{} }
+    };
+  }
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){ var s = JSON.parse(raw); if(s && s.car) return normalize(s); }
+    }catch(e){}
+    return defaultState();
+  }
+  function normalize(s){
+    ['docs','services','odometer','expenses','reminders'].forEach(function(k){ if(!Array.isArray(s[k])) s[k]=[]; });
+    if(!s.settings) s.settings={ notified:{} };
+    if(!s.settings.notified) s.settings.notified={};
+    return s;
+  }
+  var state = loadState();
+  function save(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch(e){ toast('Nu am putut salva datele pe telefon.'); }
+    syncNative();
+  }
+  // Inside the Android app, hand the deadlines to the native side so it can notify daily at 09:00.
+  var IS_ANDROID = !!(window.Android && window.Android.setReminders);
+  function syncNative(){
+    if(!IS_ANDROID) return;
+    try{
+      var list = upcoming().filter(function(i){ return i.date && i.status!=='na'; }).map(function(i){
+        return { key:i.key, title:i.title+' – '+formatPlate(state.car.plate), sub:i.sub, deadline:i.date.getTime(), remind:i.remind!=null?i.remind:30 };
+      });
+      window.Android.setReminders(JSON.stringify(list));
+    }catch(e){}
+  }
+
+  // ---------- Derived ----------
+  function kmPoints(){
+    var pts = [];
+    state.odometer.forEach(function(o){ if(o.km!=null) pts.push({ d:o.date, km:o.km }); });
+    state.services.forEach(function(s){ if(s.km!=null) pts.push({ d:s.date, km:s.km }); });
+    state.expenses.forEach(function(e){ if(e.km!=null) pts.push({ d:e.date, km:e.km }); });
+    state.docs.forEach(function(d){ if(d.km!=null) pts.push({ d:(d.start||'').slice(0,10), km:d.km }); });
+    return pts.filter(function(p){ return parseD(p.d); }).sort(function(a,b){ return parseD(a.d)-parseD(b.d) || a.km-b.km; });
+  }
+  function currentKm(){
+    var pts = kmPoints(); var max=null;
+    pts.forEach(function(p){ if(max==null || p.km>max) max=p.km; });
+    return max;
+  }
+  function kmPerDay(){
+    var pts = kmPoints(); if(pts.length<2) return null;
+    var a=pts[0], b=pts[pts.length-1];
+    var days = (parseD(b.d)-parseD(a.d))/DAY;
+    if(days<7 || b.km<=a.km) return null;
+    return (b.km-a.km)/days;
+  }
+  function latestDoc(type){
+    var list = state.docs.filter(function(d){ return d.type===type; });
+    list.sort(function(a,b){ return (parseD(b.end,true)||0)-(parseD(a.end,true)||0); });
+    return list[0] || null;
+  }
+  function latestService(type){
+    var list = state.services.filter(function(s){ return s.type===type; });
+    list.sort(function(a,b){ return (parseD(b.date)||0)-(parseD(a.date)||0) || (b.km||0)-(a.km||0); });
+    return list[0] || null;
+  }
+  function serviceDue(s){
+    var t = SERVICE_TYPES[s.type] || SERVICE_TYPES.altul;
+    var ikm = s.intervalKm!=null ? s.intervalKm : t.km;
+    var imo = s.intervalMonths!=null ? s.intervalMonths : t.months;
+    var dueKm = (ikm && s.km!=null) ? s.km+ikm : null;
+    var dueDate = (imo && parseD(s.date)) ? addMonths(parseD(s.date), imo) : null;
+    if(!dueKm && !dueDate) return null;
+    var cur = currentKm(), rate = kmPerDay();
+    var kmLeft = dueKm!=null && cur!=null ? dueKm-cur : null;
+    var days = dueDate ? daysUntil(dueDate) : null;
+    var kmDays = (kmLeft!=null && rate) ? Math.floor(kmLeft/rate) : null;
+    var effDays = days; if(kmDays!=null && (effDays==null || kmDays<effDays)) effDays = kmDays;
+    return { dueKm:dueKm, dueDate:dueDate, kmLeft:kmLeft, days:days, effDays:effDays };
+  }
+
+  // Unified list of everything with a deadline, most urgent first.
+  function upcoming(){
+    var items = [];
+    Object.keys(DOC_TYPES).forEach(function(type){
+      var d = latestDoc(type), t = DOC_TYPES[type];
+      if(!d){
+        if(REQUIRED_DOCS.indexOf(type)>-1) items.push({ key:'doc:'+type, ic:t.ic, title:t.label, sub:'Nu ai adăugat încă', status:'na', sort:1e6, open:function(){ openDocForm(null, type); } });
+        return;
+      }
+      var end = parseD(d.end, true); if(!end) return;
+      var days = daysUntil(end), rd = d.remind!=null ? d.remind : t.remind;
+      items.push({ key:'doc:'+d.id, ic:t.ic, title:t.label+(d.label?' · '+d.label:''), sub:'Expiră '+fmtD(d.end), days:days, status:statusOf(days,null,rd), sort:days, date:end, remind:rd, open:function(){ openDocForm(d); } });
+    });
+    Object.keys(SERVICE_TYPES).forEach(function(type){
+      var s = latestService(type); if(!s) return;
+      var due = serviceDue(s); if(!due) return;
+      var t = SERVICE_TYPES[type], parts=[];
+      if(due.dueKm!=null) parts.push('la '+km(due.dueKm));
+      if(due.dueDate) parts.push('până la '+fmtD(due.dueDate));
+      var sub = 'Următorul '+parts.join(' sau ');
+      if(due.kmLeft!=null) sub += ' · '+(due.kmLeft<0 ? 'depășit cu '+km(-due.kmLeft) : 'mai ai '+km(due.kmLeft));
+      items.push({ key:'svc:'+s.id, ic:t.ic, title:t.label, sub:sub, days:due.effDays, kmLeft:due.kmLeft, status:statusOf(due.days, due.kmLeft, 30), sort:due.effDays==null?99999:due.effDays, date:due.effDays!=null ? new Date(startOfDay(new Date()).getTime()+due.effDays*DAY) : due.dueDate, remind:30, open:function(){ openServiceForm(s); } });
+    });
+    if(!latestService('ulei')) items.push({ key:'svc:ulei', ic:'🛢️', title:'Schimb ulei', sub:'Adaugă ultimul schimb ca să-ți calculez următorul', status:'na', sort:1e6+1, open:function(){ openServiceForm(null,'ulei'); } });
+    state.reminders.filter(function(r){ return !r.done; }).forEach(function(r){
+      var d = parseD(r.date, true); if(!d) return;
+      var days = daysUntil(d);
+      items.push({ key:'rem:'+r.id, ic:'⏰', title:r.title, sub:fmtD(r.date)+(r.notes?' · '+r.notes:''), days:days, status:statusOf(days,null,r.remind!=null?r.remind:7), sort:days, date:d, remind:r.remind!=null?r.remind:7, open:function(){ openReminderForm(r); } });
+    });
+    items.sort(function(a,b){ return a.sort-b.sort; });
+    return items;
+  }
+
+  // Unified cost ledger: explicit expenses + costs entered on documents and services.
+  function ledger(){
+    var out = [];
+    state.expenses.forEach(function(e){ if(e.amount) out.push({ id:e.id, src:'exp', date:e.date, cat:e.cat, amount:e.amount, title:(EXP_CATS[e.cat]||EXP_CATS.altele).label, sub:e.notes||'', ref:e }); });
+    state.docs.forEach(function(d){ if(d.cost) out.push({ id:d.id, src:'doc', date:(d.start||d.end||'').slice(0,10), cat:DOC_EXP_CAT[d.type]||'altele', amount:d.cost, title:(DOC_TYPES[d.type]||DOC_TYPES.altul).label, sub:d.provider||'', ref:d }); });
+    state.services.forEach(function(s){ if(s.cost) out.push({ id:s.id, src:'svc', date:s.date, cat:'service', amount:s.cost, title:(SERVICE_TYPES[s.type]||SERVICE_TYPES.altul).label, sub:s.workshop||'', ref:s }); });
+    out.sort(function(a,b){ return (parseD(b.date)||0)-(parseD(a.date)||0); });
+    return out;
+  }
+  function fuelStats(){
+    var fills = state.expenses.filter(function(e){ return e.cat==='combustibil' && e.km!=null && e.liters; })
+      .sort(function(a,b){ return a.km-b.km; });
+    var res = { avg:null, last:null, perFill:{} };
+    var totL=0, totKm=0, prev=null;
+    fills.forEach(function(f){
+      if(prev && f.full!==false && f.km>prev.km){
+        var c = f.liters/(f.km-prev.km)*100;
+        if(c>1 && c<40){ res.perFill[f.id]=c; res.last=c; totL+=f.liters; totKm+=f.km-prev.km; }
+      }
+      if(f.full!==false) prev=f;
+    });
+    if(totKm>0) res.avg = totL/totKm*100;
+    return res;
+  }
+
+  // ---------- Rendering ----------
+  var tab = 'home', expFilter = 'luna';
+  try{ tab = sessionStorage.getItem('masina-tab') || 'home'; }catch(e){}
+  var TABS = [['home','🏠','Acasă'],['docs','📑','Documente'],['service','🔧','Service'],['costs','💰','Cheltuieli'],['car','🚗','Mașina']];
+
+  function renderTabs(){
+    document.getElementById('tabs').innerHTML = TABS.map(function(t){
+      return '<button data-tab="'+t[0]+'" class="'+(tab===t[0]?'on':'')+'"><span>'+t[1]+'</span>'+t[2]+'</button>';
+    }).join('');
+  }
+  function render(){
+    renderTabs();
+    var html = { home:viewHome, docs:viewDocs, service:viewService, costs:viewCosts, car:viewCar }[tab]();
+    document.getElementById('app').innerHTML = html;
+  }
+  function setTab(t){ tab=t; try{ sessionStorage.setItem('masina-tab', t); }catch(e){} render(); window.scrollTo(0,0); }
+
+  function plateHtml(){
+    return '<div class="plate"><div class="eu"><i>★★</i>RO</div><div class="no">'+esc(formatPlate(state.car.plate))+'</div></div>';
+  }
+  function formatPlate(p){
+    p = String(p||'').toUpperCase().replace(/\s+/g,'');
+    var m = /^([A-Z]{1,2})(\d{2,3})([A-Z]{3})$/.exec(p);
+    return m ? m[1]+' '+m[2]+' '+m[3] : p;
+  }
+  function pillFor(it){
+    if(it.status==='na') return '<span class="pill na">de completat</span>';
+    var txt;
+    if(it.days==null && it.kmLeft!=null) txt = it.kmLeft<0 ? 'depășit' : km(it.kmLeft);
+    else if(it.days==null) txt = '—';
+    else if(it.days<0) txt = 'expirat';
+    else if(it.days===0) txt = 'azi';
+    else if(it.days<=60) txt = it.days+(it.days===1?' zi':' zile');
+    else if(it.days<730) txt = Math.round(it.days/30)+' luni';
+    else txt = Math.round(it.days/365)+' ani';
+    return '<span class="pill '+it.status+'">'+txt+'</span>';
+  }
+  var rowActions = {};
+  function itemRow(it){
+    rowActions[it.key] = it.open;
+    return '<button class="row" data-act="'+esc(it.key)+'"><div class="ic">'+it.ic+'</div><div class="main"><div class="t">'+esc(it.title)+'</div><div class="s">'+esc(it.sub)+'</div></div><div class="end">'+pillFor(it)+'</div></button>';
+  }
+
+  function viewHome(){
+    rowActions = {};
+    var c = state.car, cur = currentKm(), rate = kmPerDay();
+    var items = upcoming();
+    var bad = items.filter(function(i){ return i.status==='bad'; });
+    var warn = items.filter(function(i){ return i.status==='warn'; });
+    var h = '<h1>Mașina Mea</h1>';
+    h += '<div class="card hero">'+plateHtml();
+    h += '<div class="model">'+esc([c.make,c.model].filter(Boolean).join(' ')||'Mașina mea')+(c.year?' <span class="muted" style="font-weight:500">· '+esc(c.year)+'</span>':'')+'</div>';
+    h += '<div class="vin">VIN '+esc(c.vin||'—')+'</div>';
+    h += '<div class="kmbig"><b>'+(cur!=null?Math.round(cur).toLocaleString('ro-RO'):'—')+'</b><span class="muted">km</span>'+(rate?'<span class="muted small" style="margin-left:auto">≈ '+Math.round(rate*30).toLocaleString('ro-RO')+' km/lună</span>':'')+'</div>';
+    h += '</div>';
+    if(bad.length) h += '<div class="banner bad">⚠️<div><b>'+bad.length+(bad.length===1?' element expirat sau depășit':' elemente expirate sau depășite')+':</b> '+esc(bad.map(function(i){ return i.title; }).join(', '))+'</div></div>';
+    else if(warn.length) h += '<div class="banner warn">⏳<div><b>Urmează curând:</b> '+esc(warn.map(function(i){ return i.title+' ('+(i.days!=null?relDays(i.days):km(i.kmLeft))+')'; }).join(', '))+'</div></div>';
+    if(cur==null) h += '<div class="banner info">📍<div>Adaugă kilometrajul actual ca să-ți pot calcula când urmează schimbul de ulei și reviziile.</div></div>';
+
+    h += '<div class="quick">'+
+      '<button data-quick="km"><span>📍</span>Kilometri</button>'+
+      '<button data-quick="fuel"><span>⛽</span>Alimentare</button>'+
+      '<button data-quick="exp"><span>💳</span>Cheltuială</button>'+
+      '<button data-quick="svc"><span>🔧</span>Service</button></div>';
+
+    h += '<h2>Urmează <button data-quick="rem">+ Reminder</button></h2><div class="card">';
+    h += items.length ? items.map(itemRow).join('') : '<div class="empty">Nimic de urmărit încă.</div>';
+    h += '</div>';
+
+    var L = ledger(), now = new Date();
+    var month = L.filter(function(e){ var d=parseD(e.date); return d && d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth(); }).reduce(function(s,e){ return s+e.amount; },0);
+    var year = L.filter(function(e){ var d=parseD(e.date); return d && d.getFullYear()===now.getFullYear(); }).reduce(function(s,e){ return s+e.amount; },0);
+    var fs = fuelStats();
+    h += '<h2>Pe scurt</h2><div class="stats">'+
+      '<div class="stat"><div class="l">Luna aceasta</div><div class="v">'+moneyShort(month)+' <small>lei</small></div></div>'+
+      '<div class="stat"><div class="l">Anul '+now.getFullYear()+'</div><div class="v">'+moneyShort(year)+' <small>lei</small></div></div>'+
+      '<div class="stat"><div class="l">Consum mediu</div><div class="v">'+(fs.avg?fs.avg.toFixed(1).replace('.',','):'—')+' <small>l/100km</small></div></div>'+
+      '<div class="stat"><div class="l">Cost pe km</div><div class="v">'+costPerKmText()+'</div></div>'+
+      '</div>';
+    return h;
+  }
+  function costPerKmText(){
+    var pts = kmPoints(); if(pts.length<2) return '— <small>lei</small>';
+    var dist = pts[pts.length-1].km - pts[0].km; if(dist<=0) return '— <small>lei</small>';
+    var from = parseD(pts[0].d);
+    var tot = ledger().filter(function(e){ var d=parseD(e.date); return d && d>=from && e.src!=='doc'; }).reduce(function(s,e){ return s+e.amount; },0);
+    return (tot/dist).toFixed(2).replace('.',',')+' <small>lei</small>';
+  }
+
+  function viewDocs(){
+    rowActions = {};
+    var h = '<h1>Documente</h1>';
+    h += IS_ANDROID
+      ? '<div class="banner info">🔔<div>Primești automat <b>notificare la ora 9:00</b> înainte de fiecare expirare, chiar dacă aplicația e închisă.</div></div>'
+      : '<div class="banner info">📅<div>Apasă <b>Adaugă toate în Calendar</b> ca iPhone-ul să-ți trimită notificări înainte de fiecare expirare, chiar dacă aplicația e închisă.</div></div>';
+    h += '<h2>Active <button data-act-btn="newdoc">+ Adaugă</button></h2><div class="card">';
+    var rows = [];
+    Object.keys(DOC_TYPES).forEach(function(type){
+      var d = latestDoc(type), t = DOC_TYPES[type];
+      if(!d){ if(REQUIRED_DOCS.indexOf(type)>-1) rows.push(itemRow({ key:'nd:'+type, ic:t.ic, title:t.label, sub:'Apasă ca să adaugi', status:'na', open:function(){ openDocForm(null,type); } })); return; }
+      var end = parseD(d.end,true), days = end?daysUntil(end):null;
+      var sub = (d.start?fmtD(d.start)+' – ':'Până la ')+fmtD(d.end)+(d.series&&d.series!=='-'?' · '+d.series:'');
+      rows.push(itemRow({ key:'d:'+d.id, ic:t.ic, title:t.label+(d.label?' · '+d.label:''), sub:sub, days:days, status:days==null?'na':statusOf(days,null,d.remind!=null?d.remind:t.remind), open:function(){ openDocForm(d); } }));
+    });
+    h += rows.join('') + '</div>';
+    var old = state.docs.filter(function(d){ return latestDoc(d.type)!==d; }).sort(function(a,b){ return (parseD(b.end,true)||0)-(parseD(a.end,true)||0); });
+    if(old.length){
+      h += '<h2>Istoric</h2><div class="card">'+old.map(function(d){
+        var t = DOC_TYPES[d.type]||DOC_TYPES.altul;
+        return itemRow({ key:'o:'+d.id, ic:t.ic, title:t.label, sub:fmtD(d.start)+' – '+fmtD(d.end)+(d.cost?' · '+money(d.cost):''), status:'na', days:null, open:function(){ openDocForm(d); } }).replace('<span class="pill na">de completat</span>','<span class="pill na">vechi</span>');
+      }).join('')+'</div>';
+    }
+    h += '<div style="margin-top:16px"><button class="btn'+(IS_ANDROID?' ghost':'')+'" data-act-btn="ics-all">📅 '+(IS_ANDROID?'Exportă termenele în calendar (.ics)':'Adaugă toate în Calendar')+'</button></div>';
+    return h;
+  }
+
+  function viewService(){
+    rowActions = {};
+    var h = '<h1>Service</h1>';
+    var cur = currentKm();
+    h += '<div class="card pad"><div class="muted small">Kilometraj actual</div><div class="kmbig" style="margin-top:2px"><b>'+(cur!=null?Math.round(cur).toLocaleString('ro-RO'):'—')+'</b><span class="muted">km</span><button style="margin-left:auto;color:var(--accent);font-weight:600" data-quick="km">Actualizează</button></div></div>';
+    var due = upcoming().filter(function(i){ return i.key.indexOf('svc:')===0; });
+    h += '<h2>Următoarele intervenții <button data-quick="svc">+ Adaugă</button></h2><div class="card">';
+    h += due.length ? due.map(itemRow).join('') : '<div class="empty">Adaugă o lucrare făcută (ex. ultimul schimb de ulei) ca să-ți calculez următoarea.</div>';
+    h += '</div>';
+    var list = state.services.slice().sort(function(a,b){ return (parseD(b.date)||0)-(parseD(a.date)||0); });
+    h += '<h2>Istoric lucrări</h2><div class="card">';
+    h += list.length ? list.map(function(s){
+      var t = SERVICE_TYPES[s.type]||SERVICE_TYPES.altul;
+      rowActions['s:'+s.id] = function(){ openServiceForm(s); };
+      return '<button class="row" data-act="s:'+esc(s.id)+'"><div class="ic">'+t.ic+'</div><div class="main"><div class="t">'+esc(t.label)+'</div><div class="s">'+fmtD(s.date)+(s.km!=null?' · '+km(s.km):'')+(s.workshop?' · '+esc(s.workshop):'')+'</div></div><div class="end">'+(s.cost?money(s.cost):'')+'</div></button>';
+    }).join('') : '<div class="empty">Nicio lucrare înregistrată.</div>';
+    h += '</div>';
+    var odo = state.odometer.slice().sort(function(a,b){ return (parseD(b.date)||0)-(parseD(a.date)||0); });
+    h += '<h2>Citiri kilometraj <button data-quick="km">+ Adaugă</button></h2><div class="card">';
+    h += odo.length ? odo.slice(0,20).map(function(o){
+      rowActions['k:'+o.id] = function(){ openKmForm(o); };
+      return '<button class="row" data-act="k:'+esc(o.id)+'"><div class="ic">📍</div><div class="main"><div class="t">'+km(o.km)+'</div><div class="s">'+fmtD(o.date)+(o.notes?' · '+esc(o.notes):'')+'</div></div></button>';
+    }).join('') : '<div class="empty">Nicio citire încă.</div>';
+    h += '</div>';
+    return h;
+  }
+
+  function viewCosts(){
+    rowActions = {};
+    var now = new Date(), L = ledger();
+    var inRange = function(e){
+      var d = parseD(e.date); if(!d) return false;
+      if(expFilter==='luna') return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+      if(expFilter==='an') return d.getFullYear()===now.getFullYear();
+      if(expFilter==='12') return d > addMonths(now,-12);
+      return true;
+    };
+    var list = L.filter(inRange), total = list.reduce(function(s,e){ return s+e.amount; },0);
+    var h = '<h1>Cheltuieli</h1>';
+    h += '<div class="seg">'+[['luna','Luna'],['an','Anul'],['12','12 luni'],['tot','Tot']].map(function(f){ return '<button data-filter="'+f[0]+'" class="'+(expFilter===f[0]?'on':'')+'">'+f[1]+'</button>'; }).join('')+'</div>';
+    h += '<div class="stats"><div class="stat"><div class="l">Total</div><div class="v">'+moneyShort(total)+' <small>lei</small></div></div>';
+    var fs = fuelStats();
+    var fuel = list.filter(function(e){ return e.cat==='combustibil'; }).reduce(function(s,e){ return s+e.amount; },0);
+    h += '<div class="stat"><div class="l">Combustibil</div><div class="v">'+moneyShort(fuel)+' <small>lei</small></div><div class="small muted">'+(fs.avg?'medie '+fs.avg.toFixed(1).replace('.',',')+' l/100km':'consum: adaugă 2 plinuri')+'</div></div></div>';
+
+    // Last 12 months chart
+    var months = [];
+    for(var i=11;i>=0;i--){ var d = addMonths(new Date(now.getFullYear(), now.getMonth(), 1), -i); months.push({ y:d.getFullYear(), m:d.getMonth(), v:0 }); }
+    L.forEach(function(e){ var d=parseD(e.date); if(!d) return; months.forEach(function(mm){ if(mm.y===d.getFullYear() && mm.m===d.getMonth()) mm.v+=e.amount; }); });
+    var max = Math.max.apply(null, months.map(function(m){ return m.v; }).concat([1]));
+    h += '<h2>Ultimele 12 luni</h2><div class="card"><div class="bars">'+months.map(function(m,ix){
+      return '<div class="'+(ix===11?'cur':'')+'" title="'+moneyShort(m.v)+' lei"><i style="height:'+Math.max(1,m.v/max*85)+'%"></i><span>'+MONTHS[m.m].charAt(0).toUpperCase()+'</span></div>';
+    }).join('')+'</div><div class="pad small muted" style="padding-top:8px">Maxim: '+money(max===1&&months.every(function(m){return !m.v;})?0:max)+' / lună</div></div>';
+
+    // By category
+    var byCat = {};
+    list.forEach(function(e){ byCat[e.cat]=(byCat[e.cat]||0)+e.amount; });
+    var cats = Object.keys(byCat).sort(function(a,b){ return byCat[b]-byCat[a]; });
+    if(cats.length){
+      h += '<h2>Pe categorii</h2><div class="card">'+cats.map(function(k){
+        var c = EXP_CATS[k]||EXP_CATS.altele;
+        return '<div class="row"><div class="ic">'+c.ic+'</div><div class="main"><div class="t">'+esc(c.label)+'</div><div class="catbar"><i style="width:'+(byCat[k]/total*100)+'%"></i></div></div><div class="end"><b>'+money(byCat[k])+'</b><div class="small muted">'+Math.round(byCat[k]/total*100)+'%</div></div></div>';
+      }).join('')+'</div>';
+    }
+
+    h += '<h2>Tranzacții <button data-quick="exp">+ Adaugă</button></h2><div class="card">';
+    h += list.length ? list.map(function(e){
+      var c = EXP_CATS[e.cat]||EXP_CATS.altele, key='l:'+e.src+':'+e.id;
+      rowActions[key] = function(){ if(e.src==='exp') openExpenseForm(e.ref); else if(e.src==='doc') openDocForm(e.ref); else openServiceForm(e.ref); };
+      var sub = fmtD(e.date);
+      if(e.src==='exp' && e.ref.liters) sub += ' · '+String(e.ref.liters).replace('.',',')+' l'+(fs.perFill[e.id]?' · '+fs.perFill[e.id].toFixed(1).replace('.',',')+' l/100km':'');
+      if(e.sub) sub += ' · '+e.sub;
+      return '<button class="row" data-act="'+esc(key)+'"><div class="ic">'+c.ic+'</div><div class="main"><div class="t">'+esc(e.title)+'</div><div class="s">'+esc(sub)+'</div></div><div class="end"><b>'+money(e.amount)+'</b></div></button>';
+    }).join('') : '<div class="empty">Nicio cheltuială în perioada aleasă.</div>';
+    h += '</div><p class="hint">Costurile introduse la documente (RCA, rovinietă, ITP…) și la lucrările de service apar automat aici.</p>';
+    return h;
+  }
+
+  function viewCar(){
+    var c = state.car;
+    var info = [
+      ['Nr. înmatriculare', formatPlate(c.plate)], ['Marcă / model', [c.make,c.model].filter(Boolean).join(' ')], ['An fabricație', c.year],
+      ['Serie șasiu (VIN)', c.vin], ['Categorie', c.category], ['Combustibil', c.fuel], ['Motorizare', c.engine], ['Culoare', c.color]
+    ];
+    var h = '<h1>Mașina</h1>';
+    h += '<div class="card hero" style="text-align:center">'+plateHtml()+'</div>';
+    h += '<h2>Date mașină <button data-act-btn="editcar">Editează</button></h2><div class="card">'+info.map(function(r){
+      return '<div class="row"><div class="main"><div class="s">'+esc(r[0])+'</div><div class="t" style="white-space:normal;word-break:break-all">'+esc(r[1]||'—')+'</div></div></div>';
+    }).join('')+(c.notes?'<div class="row"><div class="main"><div class="s">Note</div><div style="white-space:pre-wrap">'+esc(c.notes)+'</div></div></div>':'')+'</div>';
+
+    h += '<h2>Remindere personale <button data-quick="rem">+ Adaugă</button></h2><div class="card">';
+    rowActions = {};
+    var rs = state.reminders.slice().sort(function(a,b){ return (parseD(a.date)||0)-(parseD(b.date)||0); });
+    h += rs.length ? rs.map(function(r){
+      var d = parseD(r.date,true), days = d?daysUntil(d):null;
+      return itemRow({ key:'r:'+r.id, ic:r.done?'✅':'⏰', title:r.title, sub:fmtD(r.date)+(r.repeat?' · se repetă anual':''), days:days, status:r.done?'na':statusOf(days,null,r.remind!=null?r.remind:7), open:function(){ openReminderForm(r); } }).replace('de completat','făcut');
+    }).join('') : '<div class="empty">Ex.: schimb anvelope de iarnă, rata la leasing, vigneta Ungaria…</div>';
+    h += '</div>';
+
+    h += '<h2>Notificări & calendar</h2><div class="card pad">';
+    if(IS_ANDROID){
+      h += '<p class="small muted" style="margin-bottom:12px">Notificările sunt <b>active automat</b>: în fiecare zi la 9:00 telefonul verifică termenele și te anunță cu 30/14/7/3/1 zile înainte și în ziua expirării. Dacă nu primești nimic, verifică în Setări → Aplicații → Mașina Mea → Notificări.</p>';
+      h += '<button class="btn ghost" data-act-btn="ics-all">📅 Exportă termenele în calendar (.ics)</button>';
+    } else {
+      h += '<p class="small muted" style="margin-bottom:12px">Cel mai sigur mod de a primi notificări pe iPhone este să adaugi termenele în aplicația <b>Calendar</b>: primești alertă cu 30, 7 și 1 zi înainte, chiar dacă aplicația e închisă.</p>';
+      h += '<button class="btn" data-act-btn="ics-all">📅 Adaugă toate în Calendar</button>';
+    }
+    var nperm = ('Notification' in window) ? Notification.permission : 'unsupported';
+    if(nperm!=='unsupported') h += '<button class="btn ghost" data-act-btn="notif">'+(nperm==='granted'?'🔔 Notificări în aplicație: active':'🔔 Activează notificările în aplicație')+'</button>';
+    h += '</div>';
+
+    h += '<h2>Date & backup</h2><div class="card pad">';
+    h += '<p class="small muted" style="margin-bottom:12px">Datele sunt salvate doar pe acest telefon. Fă din când în când un backup (ex. în Fișiere, iCloud Drive sau Google Drive).</p>';
+    h += '<button class="btn ghost" data-act-btn="export">⬇️ Exportă backup (JSON)</button>';
+    h += '<button class="btn ghost" data-act-btn="import">⬆️ Importă backup</button>';
+    h += '<button class="btn ghost" data-act-btn="csv">📊 Exportă cheltuieli (CSV / Excel)</button>';
+    h += '<button class="btn danger" data-act-btn="reset">Șterge toate datele</button>';
+    h += '</div>';
+    if(!isStandalone() && !IS_ANDROID) h += '<div class="banner info" style="margin-top:16px">📲<div><b>Instalează pe iPhone:</b> în Safari apasă butonul <b>Partajează</b> ⬆️ apoi <b>Adaugă pe ecranul principal</b>. Aplicația va apărea ca o iconiță, pe tot ecranul, și merge și offline.</div></div>';
+    h += '<p class="hint" style="text-align:center;margin-top:16px">Mașina Mea · v1</p>';
+    return h;
+  }
+  function isStandalone(){ return window.navigator.standalone===true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches); }
+
+  // ---------- Sheet / forms ----------
+  var sheetSave = null;
+  function openSheet(title, fields, values, onSave, onDelete, extraHtml){
+    var h = '<div class="hd"><button data-sheet="cancel">Anulează</button><b>'+esc(title)+'</b><button class="save" data-sheet="save">Salvează</button></div>';
+    h += '<form id="sheetForm" autocomplete="off"><div class="card">';
+    fields.forEach(function(f){
+      var v = values[f.k]; if(v==null) v='';
+      if(f.type==='select'){
+        h += '<label class="field"><span>'+esc(f.label)+'</span><select name="'+f.k+'">'+f.options.map(function(o){ return '<option value="'+esc(o[0])+'"'+(String(v)===String(o[0])?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')+'</select></label>';
+      } else if(f.type==='textarea'){
+        h += '<label class="field"><span>'+esc(f.label)+'</span><textarea name="'+f.k+'" placeholder="'+esc(f.ph||'')+'">'+esc(v)+'</textarea></label>';
+      } else if(f.type==='checkbox'){
+        h += '<label class="field chk"><span style="margin:0;font-size:16px;color:var(--ink);font-weight:500">'+esc(f.label)+'</span><input type="checkbox" name="'+f.k+'"'+(v?' checked':'')+'></label>';
+      } else {
+        var type = f.type==='number' ? 'text' : (f.type||'text');
+        var mode = f.type==='number' ? ' inputmode="decimal"' : '';
+        h += '<label class="field"><span>'+esc(f.label)+'</span><input name="'+f.k+'" type="'+type+'"'+mode+' value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'"></label>';
+      }
+    });
+    h += '</div>';
+    if(extraHtml) h += extraHtml;
+    if(onDelete) h += '<div style="margin-top:16px"><button type="button" class="btn danger" data-sheet="delete">Șterge</button></div>';
+    h += '</form>';
+    document.getElementById('sheetIn').innerHTML = h;
+    sheetSave = function(){
+      var form = document.getElementById('sheetForm'), out = {};
+      fields.forEach(function(f){
+        var el = form.elements[f.k];
+        if(f.type==='checkbox') out[f.k] = el.checked;
+        else if(f.type==='number') out[f.k] = num(el.value);
+        else out[f.k] = el.value.trim();
+      });
+      if(onSave(out)===false) return;
+      closeSheet(); save(); render();
+    };
+    sheetDelete = onDelete ? function(){ if(confirm('Sigur ștergi?')){ onDelete(); closeSheet(); save(); render(); toast('Șters'); } } : null;
+    document.getElementById('sheet').classList.add('on');
+    document.getElementById('scrim').classList.add('on');
+    document.getElementById('sheet').scrollTop = 0;
+  }
+  var sheetDelete = null;
+  function closeSheet(){
+    document.getElementById('sheet').classList.remove('on');
+    document.getElementById('scrim').classList.remove('on');
+    if(document.activeElement) document.activeElement.blur();
+  }
+  function opts(map){ return Object.keys(map).map(function(k){ return [k, map[k].ic+'  '+map[k].label]; }); }
+  function upsert(list, obj){ var i = list.findIndex(function(x){ return x.id===obj.id; }); if(i>-1) list[i]=obj; else list.push(obj); }
+  function remove(list, id){ var i = list.findIndex(function(x){ return x.id===id; }); if(i>-1) list.splice(i,1); }
+  function need(v, msg){ if(v==null || v===''){ toast(msg); return false; } return true; }
+
+  function openDocForm(doc, presetType){
+    var isNew = !doc;
+    var d = doc ? Object.assign({}, doc) : { id:uid(), type:presetType||'rca', start:today()+'T00:00', end:'', remind:null };
+    var startDefault = d.start && d.start.length===10 ? d.start+'T00:00' : d.start;
+    var endDefault = d.end && d.end.length===10 ? d.end+'T23:59' : d.end;
+    var fields = [
+      { k:'type', label:'Tip document', type:'select', options:opts(DOC_TYPES) },
+      { k:'label', label:'Denumire (opțional)', ph:'ex. Rovinietă Ungaria' },
+      { k:'series', label:'Serie / nr. poliță', ph:'ex. RO/12/A12/AB nr. 000123' },
+      { k:'provider', label:'Asigurător / emitent', ph:'ex. Allianz, Groupama, RAR…' },
+      { k:'start', label:'Valabil de la', type:'datetime-local' },
+      { k:'end', label:'Valabil până la', type:'datetime-local' },
+      { k:'cost', label:'Cost (lei)', type:'number', ph:'0' },
+      { k:'remind', label:'Avertizează cu câte zile înainte', type:'number', ph:'implicit: '+(DOC_TYPES[d.type]||DOC_TYPES.altul).remind },
+      { k:'km', label:'Kilometraj la emitere (opțional)', type:'number' },
+      { k:'notes', label:'Note', type:'textarea', ph:'ex. telefon daune, bonus-malus, franșiză…' }
+    ];
+    var extra = '';
+    if(!isNew) extra = '<div style="margin-top:16px"><button type="button" class="btn ghost" data-sheet="ics">📅 Adaugă în Calendar</button><button type="button" class="btn ghost" data-sheet="renew">🔁 Reînnoiește (document nou de la expirare)</button></div>';
+    openSheet(isNew?'Document nou':(DOC_TYPES[d.type]||DOC_TYPES.altul).label, fields, Object.assign({}, d, { start:startDefault, end:endDefault }), function(v){
+      if(!need(v.end,'Completează data de expirare')) return false;
+      Object.assign(d, v);
+      upsert(state.docs, d); toast(isNew?'Document adăugat':'Salvat');
+    }, isNew?null:function(){ remove(state.docs, d.id); }, extra);
+    sheetExtra = {
+      ics:function(){ downloadIcs([icsEventForDoc(doc)], 'masina-'+doc.type+'.ics'); },
+      renew:function(){
+        var e = parseD(doc.end,true); if(!e) return;
+        var ns = new Date(e.getTime()+60000);
+        var months = doc.type==='itp' ? 24 : 12;
+        var ne = addMonths(ns, months); ne.setDate(ne.getDate()-1);
+        openDocForm(null, doc.type);
+        var f = document.getElementById('sheetForm');
+        f.elements.start.value = isoDate(ns)+'T00:00';
+        f.elements.end.value = isoDate(ne)+'T23:59';
+        f.elements.provider.value = doc.provider||'';
+        f.elements.label.value = doc.label||'';
+      }
+    };
+  }
+  var sheetExtra = {};
+
+  function openServiceForm(svc, presetType){
+    var isNew = !svc;
+    var s = svc ? Object.assign({}, svc) : { id:uid(), type:presetType||'ulei', date:today(), km:currentKm() };
+    var t = SERVICE_TYPES[s.type]||SERVICE_TYPES.altul;
+    var fields = [
+      { k:'type', label:'Lucrare', type:'select', options:opts(SERVICE_TYPES) },
+      { k:'date', label:'Data', type:'date' },
+      { k:'km', label:'Kilometraj', type:'number', ph:'ex. 98500' },
+      { k:'cost', label:'Cost total (lei)', type:'number' },
+      { k:'workshop', label:'Service', ph:'ex. Service autorizat VW Ploiești' },
+      { k:'details', label:'Detalii (ulei, piese)', ph:'ex. Castrol Edge 5W-30, 4.6 l' },
+      { k:'intervalKm', label:'Următorul peste … km', type:'number', ph:t.km?'implicit: '+t.km:'fără' },
+      { k:'intervalMonths', label:'Următorul peste … luni', type:'number', ph:t.months?'implicit: '+t.months:'fără' },
+      { k:'notes', label:'Note', type:'textarea' }
+    ];
+    openSheet(isNew?'Lucrare service':t.label, fields, s, function(v){
+      if(!need(v.date,'Completează data')) return false;
+      Object.assign(s, v); upsert(state.services, s); toast(isNew?'Lucrare adăugată':'Salvat');
+    }, isNew?null:function(){ remove(state.services, s.id); },
+    '<p class="hint">Intervalele implicite sunt orientative — verifică în cartea service-ului mașinii tale (multe VW au interval flexibil „LongLife” de până la 30.000 km / 2 ani).</p>');
+    sheetExtra = {};
+  }
+
+  function openKmForm(o){
+    var isNew = !o;
+    var r = o ? Object.assign({}, o) : { id:uid(), date:today(), km:null };
+    var cur = currentKm();
+    openSheet(isNew?'Kilometraj':'Citire kilometraj', [
+      { k:'km', label:'Kilometri la bord', type:'number', ph:cur!=null?'ultimul: '+Math.round(cur):'ex. 98500' },
+      { k:'date', label:'Data', type:'date' },
+      { k:'notes', label:'Note', ph:'opțional' }
+    ], r, function(v){
+      if(!need(v.km,'Completează kilometrii')) return false;
+      if(isNew && cur!=null && v.km<cur && !confirm('Valoarea e mai mică decât ultimul kilometraj ('+Math.round(cur)+'). Salvezi oricum?')) return false;
+      Object.assign(r, v); upsert(state.odometer, r); toast('Kilometraj salvat');
+    }, isNew?null:function(){ remove(state.odometer, r.id); });
+    sheetExtra = {};
+  }
+
+  function openExpenseForm(exp, presetCat){
+    var isNew = !exp;
+    var e = exp ? Object.assign({}, exp) : { id:uid(), date:today(), cat:presetCat||'combustibil', full:true, km:null };
+    var fuel = e.cat==='combustibil';
+    var fields = [
+      { k:'cat', label:'Categorie', type:'select', options:opts(EXP_CATS) },
+      { k:'amount', label:'Sumă (lei)', type:'number', ph:'0' },
+      { k:'date', label:'Data', type:'date' },
+      { k:'km', label:'Kilometraj (opțional'+(fuel?', necesar pt. consum':'')+')', type:'number' },
+      { k:'liters', label:'Litri (doar combustibil)', type:'number' },
+      { k:'full', label:'Am făcut plinul', type:'checkbox' },
+      { k:'notes', label:'Note', ph:fuel?'ex. OMV, motorină':'opțional' }
+    ];
+    openSheet(isNew?(fuel?'Alimentare':'Cheltuială'):'Cheltuială', fields, e, function(v){
+      if(!need(v.amount,'Completează suma')) return false;
+      if(v.cat!=='combustibil'){ v.liters=null; }
+      Object.assign(e, v); upsert(state.expenses, e); toast('Salvat');
+    }, isNew?null:function(){ remove(state.expenses, e.id); });
+    sheetExtra = {};
+  }
+
+  function openReminderForm(rem){
+    var isNew = !rem;
+    var r = rem ? Object.assign({}, rem) : { id:uid(), title:'', date:'', repeat:false, done:false };
+    openSheet(isNew?'Reminder nou':'Reminder', [
+      { k:'title', label:'Ce trebuie făcut', ph:'ex. Montat anvelope de iarnă' },
+      { k:'date', label:'Data', type:'date' },
+      { k:'remind', label:'Avertizează cu câte zile înainte', type:'number', ph:'implicit: 7' },
+      { k:'repeat', label:'Se repetă în fiecare an', type:'checkbox' },
+      { k:'done', label:'Făcut', type:'checkbox' },
+      { k:'notes', label:'Note', type:'textarea' }
+    ], r, function(v){
+      if(!need(v.title,'Scrie ce trebuie făcut')) return false;
+      if(!need(v.date,'Alege data')) return false;
+      // Completing a yearly reminder rolls it to next year instead of retiring it.
+      if(v.done && v.repeat){ v.date = isoDate(addMonths(parseD(v.date),12)); v.done=false; toast('Mutat la '+fmtD(v.date)); }
+      Object.assign(r, v); upsert(state.reminders, r); if(!(v.repeat)) toast('Salvat');
+    }, isNew?null:function(){ remove(state.reminders, r.id); },
+    isNew?'':'<div style="margin-top:16px"><button type="button" class="btn ghost" data-sheet="ics">📅 Adaugă în Calendar</button></div>');
+    sheetExtra = isNew ? {} : { ics:function(){ downloadIcs([icsEventForReminder(rem)], 'masina-reminder.ics'); } };
+  }
+
+  function openCarForm(){
+    var c = state.car;
+    openSheet('Date mașină', [
+      { k:'plate', label:'Nr. înmatriculare' },
+      { k:'make', label:'Marcă' },
+      { k:'model', label:'Model' },
+      { k:'year', label:'An fabricație', type:'number' },
+      { k:'vin', label:'Serie șasiu (VIN)' },
+      { k:'category', label:'Categorie' },
+      { k:'fuel', label:'Combustibil', type:'select', options:[['',''],['Benzină','Benzină'],['Motorină','Motorină'],['Hibrid','Hibrid'],['Electric','Electric'],['GPL','GPL']] },
+      { k:'engine', label:'Motorizare', ph:'ex. 2.0 TDI 150 CP' },
+      { k:'color', label:'Culoare' },
+      { k:'notes', label:'Note', type:'textarea', ph:'ex. presiune roți, cod radio, dimensiune anvelope…' }
+    ], c, function(v){
+      v.plate = v.plate.toUpperCase().replace(/\s+/g,''); v.vin = v.vin.toUpperCase().replace(/\s+/g,'');
+      Object.assign(state.car, v); toast('Salvat');
+    });
+    sheetExtra = {};
+  }
+
+  // ---------- Calendar (.ics) ----------
+  function icsDate(d){ return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate()); }
+  function icsEsc(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n'); }
+  function stamp(){ var d=new Date(); return d.getUTCFullYear()+pad2(d.getUTCMonth()+1)+pad2(d.getUTCDate())+'T'+pad2(d.getUTCHours())+pad2(d.getUTCMinutes())+'00Z'; }
+  function vevent(id, date, title, desc, alarmsDays, yearly){
+    var next = new Date(date); next.setDate(next.getDate()+1);
+    var L = ['BEGIN:VEVENT','UID:'+id+'@masina-mea','DTSTAMP:'+stamp(),'DTSTART;VALUE=DATE:'+icsDate(date),'DTEND;VALUE=DATE:'+icsDate(next),
+      'SUMMARY:'+icsEsc(title),'DESCRIPTION:'+icsEsc(desc)];
+    if(yearly) L.push('RRULE:FREQ=YEARLY');
+    alarmsDays.forEach(function(n){
+      // All-day events start at midnight; -P{n}DT15H fires at 09:00 the day before the n-th day.
+      L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(title),'TRIGGER:'+(n===0?'PT9H':'-P'+(n-1)+'DT15H'),'END:VALARM');
+    });
+    L.push('END:VEVENT');
+    return L.join('\r\n');
+  }
+  function icsEventForDoc(d){
+    var t = DOC_TYPES[d.type]||DOC_TYPES.altul, end = parseD(d.end,true);
+    if(!end) return null;
+    var title = '🚗 Expiră '+t.label+(d.label?' ('+d.label+')':'')+' – '+formatPlate(state.car.plate);
+    var desc = 'Valabil până la '+fmtD(d.end)+(d.series&&d.series!=='-'?'\nSerie: '+d.series:'')+(d.provider?'\nEmitent: '+d.provider:'')+(d.notes?'\n'+d.notes:'');
+    return vevent('doc-'+d.id, end, title, desc, [30,7,1]);
+  }
+  function icsEventForService(s){
+    var due = serviceDue(s); if(!due) return null;
+    var date = due.dueDate;
+    if(due.effDays!=null && (!date || due.effDays < due.days)) date = new Date(Date.now()+Math.max(0,due.effDays)*DAY);
+    if(!date) return null;
+    var t = SERVICE_TYPES[s.type]||SERVICE_TYPES.altul;
+    return vevent('svc-'+s.id, date, '🔧 '+t.label+' – '+formatPlate(state.car.plate), (due.dueKm?'La '+km(due.dueKm)+' (estimat după kilometrajul mediu)':'')+'\nUltima: '+fmtD(s.date)+(s.km!=null?', '+km(s.km):''), [14,3]);
+  }
+  function icsEventForReminder(r){
+    var d = parseD(r.date); if(!d) return null;
+    return vevent('rem-'+r.id, d, '⏰ '+r.title, r.notes||'', [r.remind!=null?r.remind:7, 0], r.repeat);
+  }
+  function allIcsEvents(){
+    var ev = [];
+    Object.keys(DOC_TYPES).forEach(function(t){ var d=latestDoc(t); if(d) ev.push(icsEventForDoc(d)); });
+    Object.keys(SERVICE_TYPES).forEach(function(t){ var s=latestService(t); if(s) ev.push(icsEventForService(s)); });
+    state.reminders.forEach(function(r){ if(!r.done) ev.push(icsEventForReminder(r)); });
+    return ev.filter(Boolean);
+  }
+  function downloadIcs(events, name){
+    events = events.filter(Boolean);
+    if(!events.length){ toast('Nu există termene de adăugat'); return; }
+    var body = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Masina Mea//RO','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Mașina Mea'].concat(events).concat(['END:VCALENDAR']).join('\r\n');
+    downloadFile(body, name, 'text/calendar;charset=utf-8');
+  }
+  function downloadFile(text, name, type){
+    if(IS_ANDROID && window.Android.saveFile){ window.Android.saveFile(name, type, text); return; }
+    var blob = new Blob([text], { type:type });
+    var file = null;
+    try{ file = new File([blob], name, { type:type }); }catch(e){}
+    // In a home-screen app iOS cannot follow download links, so prefer the share sheet there.
+    if(isStandalone() && file && navigator.canShare && navigator.canShare({ files:[file] })){
+      navigator.share({ files:[file], title:name }).catch(function(){});
+      return;
+    }
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+  }
+
+  // ---------- Backup ----------
+  function exportJSON(){ downloadFile(JSON.stringify(state, null, 2), 'masina-mea-backup-'+today()+'.json', 'application/json'); }
+  function exportCSV(){
+    var rows = [['Data','Categorie','Descriere','Suma (lei)','Km','Litri','Note']];
+    ledger().forEach(function(e){
+      rows.push([fmtD(e.date), (EXP_CATS[e.cat]||EXP_CATS.altele).label, e.title, String(e.amount).replace('.',','), e.ref.km!=null?e.ref.km:'', e.ref.liters?String(e.ref.liters).replace('.',','):'', e.sub||e.ref.notes||'']);
+    });
+    var csv = '\ufeff'+rows.map(function(r){ return r.map(function(c){ c=String(c==null?'':c); return /[;"\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c; }).join(';'); }).join('\r\n');
+    downloadFile(csv, 'masina-cheltuieli-'+today()+'.csv', 'text/csv;charset=utf-8');
+  }
+  function importJSON(file){
+    var rd = new FileReader();
+    rd.onload = function(){
+      try{
+        var s = JSON.parse(rd.result);
+        if(!s || !s.car) throw new Error('format');
+        if(!confirm('Înlocuiești datele actuale cu cele din backup?')) return;
+        state = normalize(s); save(); render(); toast('Backup importat');
+      }catch(e){ toast('Fișierul nu este un backup valid'); }
+    };
+    rd.readAsText(file);
+  }
+
+  // ---------- Notifications (while the app is open) ----------
+  function checkNotifications(){
+    if(!('Notification' in window) || Notification.permission!=='granted') return;
+    var t = today(), sent = state.settings.notified, changed=false;
+    upcoming().forEach(function(it){
+      if(it.status!=='bad' && it.status!=='warn') return;
+      if(sent[it.key]===t) return;
+      sent[it.key]=t; changed=true;
+      var body = it.days!=null ? relDays(it.days) : (it.kmLeft<0?'termen depășit':'mai ai '+km(it.kmLeft));
+      showNotif(it.title, body);
+    });
+    if(changed) save();
+  }
+  function showNotif(title, body){
+    var opts = { body:body, icon:'icons/masina-192.png', tag:title };
+    if(navigator.serviceWorker && navigator.serviceWorker.ready){
+      navigator.serviceWorker.ready.then(function(r){ r.showNotification(title, opts); }).catch(function(){ try{ new Notification(title, opts); }catch(e){} });
+    } else { try{ new Notification(title, opts); }catch(e){} }
+  }
+  function enableNotifications(){
+    if(!('Notification' in window)){ toast('Instalează aplicația pe ecranul principal pentru notificări'); return; }
+    Notification.requestPermission().then(function(p){
+      if(p==='granted'){ state.settings.notified={}; save(); checkNotifications(); toast('Notificări activate'); }
+      else toast('Notificările nu au fost permise');
+      render();
+    });
+  }
+
+  // ---------- Toast ----------
+  var toastT;
+  function toast(msg){
+    var el = document.getElementById('toast'); el.textContent = msg; el.classList.add('on');
+    clearTimeout(toastT); toastT = setTimeout(function(){ el.classList.remove('on'); }, 2200);
+  }
+
+  // ---------- Events ----------
+  document.addEventListener('click', function(ev){
+    var el = ev.target.closest('[data-tab],[data-act],[data-quick],[data-act-btn],[data-filter],[data-sheet]');
+    if(!el) return;
+    if(el.dataset.tab) return setTab(el.dataset.tab);
+    if(el.dataset.act){ var fn = rowActions[el.dataset.act]; if(fn) fn(); return; }
+    if(el.dataset.filter){ expFilter = el.dataset.filter; render(); return; }
+    if(el.dataset.quick){
+      var q = el.dataset.quick;
+      if(q==='km') openKmForm();
+      else if(q==='fuel') openExpenseForm(null,'combustibil');
+      else if(q==='exp') openExpenseForm(null,'service');
+      else if(q==='svc') openServiceForm();
+      else if(q==='rem') openReminderForm();
+      return;
+    }
+    if(el.dataset.sheet){
+      ev.preventDefault();
+      var a = el.dataset.sheet;
+      if(a==='cancel') closeSheet();
+      else if(a==='save') sheetSave && sheetSave();
+      else if(a==='delete') sheetDelete && sheetDelete();
+      else if(sheetExtra[a]) sheetExtra[a]();
+      return;
+    }
+    var b = el.dataset.actBtn;
+    if(b==='newdoc') openDocForm();
+    else if(b==='editcar') openCarForm();
+    else if(b==='ics-all') downloadIcs(allIcsEvents(), 'masina-mea-termene.ics');
+    else if(b==='notif') enableNotifications();
+    else if(b==='export') exportJSON();
+    else if(b==='import') document.getElementById('importFile').click();
+    else if(b==='csv') exportCSV();
+    else if(b==='reset'){ if(confirm('Ștergi definitiv toate datele mașinii de pe acest telefon?')){ state = defaultState(); save(); render(); toast('Date resetate'); } }
+  });
+  document.getElementById('scrim').addEventListener('click', closeSheet);
+  // Android back button: close the open form, then go back to the home tab, then leave the app.
+  window.__androidBack = function(){
+    if(document.getElementById('sheet').classList.contains('on')){ closeSheet(); return true; }
+    if(tab!=='home'){ setTab('home'); return true; }
+    return false;
+  };
+  document.addEventListener('submit', function(e){ e.preventDefault(); sheetSave && sheetSave(); });
+  document.getElementById('importFile').addEventListener('change', function(){ if(this.files[0]) importJSON(this.files[0]); this.value=''; });
+  // Fuel-only fields (litres, full tank) are shown only for the fuel category.
+  document.addEventListener('change', function(e){
+    var f = e.target.form; if(!f || f.id!=='sheetForm') return;
+    if(e.target.name==='cat' && f.elements.liters){
+      var isFuel = e.target.value==='combustibil';
+      f.elements.liters.closest('.field').classList.toggle('hidden', !isFuel);
+      f.elements.full.closest('.field').classList.toggle('hidden', !isFuel);
+    }
+  });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden){ render(); checkNotifications(); } });
+
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('masina-sw.js').catch(function(){}); }
+  save();
+  render();
+  checkNotifications();
+  // Hide fuel-only fields when an expense form opens on a non-fuel category.
+  new MutationObserver(function(){
+    var f = document.getElementById('sheetForm');
+    if(f && f.elements.cat && f.elements.liters){ f.elements.cat.dispatchEvent(new Event('change', { bubbles:true })); }
+  }).observe(document.getElementById('sheetIn'), { childList:true });
+})();
+</script>
+</body>
+</html>
