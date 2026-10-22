@@ -1,0 +1,6 @@
+build/
+# Private: signing key, personal car data and the built APK stay off GitHub.
+*.keystore
+preset.js
+*.apk
+*.idsig

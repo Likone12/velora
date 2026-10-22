@@ -1,0 +1,17 @@
+{
+  "name": "Mașina Mea — documente, service și cheltuieli",
+  "short_name": "Mașina Mea",
+  "description": "Rovinietă, RCA, ITP, schimb de ulei, kilometraj, alimentări și cheltuieli pentru mașina ta, cu remindere în calendar.",
+  "start_url": "./masina.html",
+  "scope": "./",
+  "id": "./masina.html",
+  "display": "standalone",
+  "background_color": "#F2F3F7",
+  "theme_color": "#0F172A",
+  "orientation": "portrait",
+  "lang": "ro",
+  "icons": [
+    { "src": "icons/masina-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/masina-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
